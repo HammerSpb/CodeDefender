@@ -1,0 +1,160 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPER
+  SUPPORT
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum RepositoryProvider {
+  GITHUB
+  GITLAB
+  BITBUCKET
+}
+
+enum ScanStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum Plan {
+  STARTER
+  PRO
+  BUSINESS
+  ENTERPRISE
+}
+
+enum WorkspaceRole {
+  ADMIN
+  MEMBER
+}
+
+model User {
+  id             String          @id @default(uuid())
+  email          String          @unique
+  password       String?
+  provider       String?
+  providerId     String?
+  role           UserRole        @default(MEMBER)
+  orgName        String?         @map("org_name")
+  plan           Plan?
+  ownerId        String?         @map("owner_id")
+  workspaces     Workspace[]     @relation("WorkspaceOwner")
+  userWorkspaces UserWorkspace[]
+  auditLogs      AuditLog[]
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Workspace {
+  id             String          @id @default(uuid())
+  name           String
+  ownerId        String          @map("owner_id")
+  owner          User            @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  repositoryId   String?         @map("repository_id")
+  repository     Repository?     @relation(fields: [repositoryId], references: [id])
+  userWorkspaces UserWorkspace[]
+  scans          Scan[]
+  schedules      Schedule[]
+  auditLogs      AuditLog[]
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+
+  @@map("workspaces")
+}
+
+model UserWorkspace {
+  id          String        @id @default(uuid())
+  userId      String        @map("user_id")
+  workspaceId String        @map("workspace_id")
+  role        WorkspaceRole
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  @@unique([userId, workspaceId])
+  @@map("user_workspaces")
+}
+
+model Repository {
+  id          String             @id @default(uuid())
+  url         String
+  provider    RepositoryProvider
+  accessToken String             @map("access_token")
+  ownerId     String             @map("owner_id")
+  workspaces  Workspace[]
+  scans       Scan[]
+  schedules   Schedule[]
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+
+  @@map("repositories")
+}
+
+model Scan {
+  id             String     @id @default(uuid())
+  repositoryId   String     @map("repository_id")
+  repository     Repository @relation(fields: [repositoryId], references: [id])
+  workspaceId    String     @map("workspace_id")
+  workspace      Workspace  @relation(fields: [workspaceId], references: [id])
+  branch         String
+  status         ScanStatus
+  results        Json?
+  historical     Boolean    @default(false)
+  fileExclusions String[]   @map("file_exclusions")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  completedAt    DateTime?  @map("completed_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  @@map("scans")
+}
+
+model Schedule {
+  id             String     @id @default(uuid())
+  repositoryId   String     @map("repository_id")
+  repository     Repository @relation(fields: [repositoryId], references: [id])
+  workspaceId    String     @map("workspace_id")
+  workspace      Workspace  @relation(fields: [workspaceId], references: [id])
+  branch         String
+  cronExpression String
+  historical     Boolean    @default(false)
+  fileExclusions String[]   @map("file_exclusions")
+  active         Boolean    @default(true)
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  @@map("schedules")
+}
+
+model AuditLog {
+  id          String     @id @default(uuid())
+  userId      String     @map("user_id")
+  user        User       @relation(fields: [userId], references: [id])
+  workspaceId String?    @map("workspace_id")
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id])
+  action      String
+  details     Json
+  timestamp   DateTime   @default(now())
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  @@map("audit_logs")
+}
