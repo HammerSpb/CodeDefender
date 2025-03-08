@@ -1,0 +1,52 @@
+# Dependencies
+node_modules
+pnpm-lock.yaml
+
+# Build outputs
+dist
+coverage
+.nyc_output
+build
+
+# Development files
+.git
+.github
+.husky
+.vscode
+**/*.spec.ts
+**/*.test.ts
+**/*.e2e-spec.ts
+test
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Docker related
+.docker
+docker-compose*.yml
+docker-compose*.yaml
+!docker-compose.prod.yaml
+
+# Documentation
+README.md
+CHANGELOG.md
+LICENSE
+docs
+
+# Temporary files
+.temp
+.tmp
