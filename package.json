@@ -18,11 +18,11 @@
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:deploy": "prisma migrate deploy",
-    "prisma:seed": "node --loader ts-node/esm",
-    "prisma:reset": "prisma migrate reset --force",
+    "prisma:generate": "prisma generate --schema=src/prisma/schema.prisma",
+    "prisma:migrate": "prisma migrate dev --schema=src/prisma/schema.prisma",
+    "prisma:deploy": "prisma migrate deploy --schema=src/prisma/schema.prisma",
+    "prisma:seed": "node --loader ts-node/esm src/prisma/seed.ts",
+    "prisma:reset": "prisma migrate reset --force --schema=src/prisma/schema.prisma",
     "db:seed": "pnpm prisma:seed",
     "db:migrate": "pnpm prisma:migrate",
     "db:reset": "pnpm prisma:reset",
@@ -92,7 +92,8 @@
     "vite": "^6.2.1",
     "vite-plugin-node": "^4.0.0",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.0.8"
+    "vitest": "^3.0.8",
+    "vitest-mock-extended": "^3.0.1"
   },
   "jest": {
     "moduleFileExtensions": [

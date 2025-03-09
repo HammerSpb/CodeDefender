@@ -183,6 +183,9 @@ importers:
       vitest:
         specifier: ^3.0.8
         version: 3.0.8(@types/node@22.13.10)(terser@5.39.0)
+      vitest-mock-extended:
+        specifier: ^3.0.1
+        version: 3.0.1(typescript@5.8.2)(vitest@3.0.8(@types/node@22.13.10)(terser@5.39.0))
 
 packages:
 
@@ -4028,6 +4031,14 @@ packages:
     peerDependencies:
       typescript: '>=4.8.4'
 
+  ts-essentials@10.0.4:
+    resolution: {integrity: sha512-lwYdz28+S4nicm+jFi6V58LaAIpxzhg9rLdgNC1VsdP/xiFBseGhF1M/shwCk6zMmwahBZdXcl34LVHrEang3A==}
+    peerDependencies:
+      typescript: '>=4.5.0'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   ts-jest@29.2.6:
     resolution: {integrity: sha512-yTNZVZqc8lSixm+QGVFcPe6+yj7+TWZwIesuOWvfcn4B9bz5x4NDzVCQQjOs7Hfouu36aEqfEbo9Qpo+gq8dDg==}
     engines: {node: ^14.15.0 || ^16.10.0 || ^18.0.0 || >=20.0.0}
@@ -4261,6 +4272,12 @@ packages:
         optional: true
       yaml:
         optional: true
+
+  vitest-mock-extended@3.0.1:
+    resolution: {integrity: sha512-VI7CRRvIi+MbAsqdGTxp3K+eiY7BR1zrVflZ5DBrFUXPjRZRgxXajlYdNyIu3v1bb5ZfdLANXwZ9i/RfVMfS6A==}
+    peerDependencies:
+      typescript: 3.x || 4.x || 5.x
+      vitest: '>=3.0.0'
 
   vitest@3.0.8:
     resolution: {integrity: sha512-dfqAsNqRGUc8hB9OVR2P0w8PZPEckti2+5rdZip0WIz9WW0MnImJ8XiR61QhqLa92EQzKP2uPkzenKOAHyEIbA==}
@@ -8278,7 +8295,7 @@ snapshots:
 
   send@1.1.0:
     dependencies:
-      debug: 4.4.0
+      debug: 4.3.6
       destroy: 1.2.0
       encodeurl: 2.0.0
       escape-html: 1.0.3
@@ -8586,6 +8603,10 @@ snapshots:
     dependencies:
       typescript: 5.8.2
 
+  ts-essentials@10.0.4(typescript@5.8.2):
+    optionalDependencies:
+      typescript: 5.8.2
+
   ts-jest@29.2.6(@babel/core@7.26.9)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.26.9))(esbuild@0.25.0)(jest@29.7.0(@types/node@22.13.10)(ts-node@10.9.2(@swc/core@1.11.8)(@types/node@22.13.10)(typescript@5.8.2)))(typescript@5.8.2):
     dependencies:
       bs-logger: 0.2.6
@@ -8801,6 +8822,12 @@ snapshots:
       '@types/node': 22.13.10
       fsevents: 2.3.3
       terser: 5.39.0
+
+  vitest-mock-extended@3.0.1(typescript@5.8.2)(vitest@3.0.8(@types/node@22.13.10)(terser@5.39.0)):
+    dependencies:
+      ts-essentials: 10.0.4(typescript@5.8.2)
+      typescript: 5.8.2
+      vitest: 3.0.8(@types/node@22.13.10)(terser@5.39.0)
 
   vitest@3.0.8(@types/node@22.13.10)(terser@5.39.0):
     dependencies:
