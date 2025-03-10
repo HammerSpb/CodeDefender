@@ -6,7 +6,7 @@ import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { PrismaService } from './prisma/prisma.service';
 
-export async function bootstrap() {
+async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.useLogger(app.get(Logger));
 
@@ -26,8 +26,11 @@ export async function bootstrap() {
   const prismaService = app.get(PrismaService);
   await prismaService.enableShutdownHooks(app);
 
-  // Configure API prefix
-  app.setGlobalPrefix('api/v1');
+  // Configure API prefix with newer syntax
+  app.setGlobalPrefix('api/v1', {
+    // Exclude Swagger endpoint from the prefix
+    exclude: ['api/docs'],
+  });
 
   // Configure Swagger
   const config = new DocumentBuilder()
@@ -53,15 +56,6 @@ export async function bootstrap() {
   await app.listen(port);
   console.log(`Application is running on: http://localhost:${port}`);
   console.log(`Swagger documentation available at: http://localhost:${port}/api/docs`);
-
-  return app;
 }
 
-// Vite HMR support
-if (import.meta.hot) {
-  import.meta.hot.accept();
-  import.meta.hot.dispose(() => console.log('Module disposed'));
-}
-
-// For direct execution
 bootstrap();
