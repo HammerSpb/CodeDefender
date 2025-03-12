@@ -8,8 +8,8 @@ import { Module } from '@nestjs/common';
 import { ScansController } from './scans.controller';
 import { ScansProcessor } from './scans.processor';
 import { ScansService } from './scans.service';
-import { ScanController } from './controllers/scan.controller';
-import { ScanService } from './services/scan.service';
+import { ScanController } from './scan.controller';
+import { ScanService } from './scan.service';
 
 @Module({
   imports: [

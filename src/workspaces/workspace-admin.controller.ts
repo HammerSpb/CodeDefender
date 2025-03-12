@@ -10,12 +10,12 @@ import {
   Query,
   ForbiddenException,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { PERMISSION_CODES } from '../../permissions/constants/permission-codes';
-import { Feature, LimitType } from '../../plans/constants/plan-features';
-import { Authorize, AuthorizeWorkspace, AuthorizeResource } from '../../permissions/decorators/unified-auth.decorator';
-import { RequiresPermission } from '../../permissions/decorators/requires-permission.decorator';
-import { RequiresFeature } from '../../plans/decorators/requires-feature.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PERMISSION_CODES } from '../permissions/constants/permission-codes';
+import { Feature, LimitType } from '../plans/constants/plan-features';
+import { Authorize, AuthorizeWorkspace, AuthorizeResource } from '../permissions/decorators/unified-auth.decorator';
+import { RequiresPermission } from '../permissions/decorators/requires-permission.decorator';
+import { RequiresFeature } from '../plans/decorators/requires-feature.decorator';
 
 @Controller('admin/workspaces')
 @UseGuards(JwtAuthGuard)

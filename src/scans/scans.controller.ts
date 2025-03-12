@@ -9,7 +9,7 @@ import {
   CanDeleteScan,
   CanAccessHistoricalScans,
   CanCreateAdvancedScan,
-} from './decorators/scan-policy.decorator';
+} from './scan-policy.decorator';
 
 @ApiTags('scans')
 @Controller('workspaces/:workspace_id/scans')

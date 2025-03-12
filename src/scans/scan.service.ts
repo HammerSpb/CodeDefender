@@ -1,8 +1,8 @@
 import { Injectable, Logger, ForbiddenException } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { PlansService } from '../../plans/plans.service';
-import { UsageService } from '../../plans/services/usage.service';
-import { Feature, LimitType, ResourceType } from '../../plans/constants/plan-features';
+import { PrismaService } from '../prisma/prisma.service';
+import { PlansService } from '../plans/plans.service';
+import { UsageService } from '../plans/usage.service';
+import { Feature, LimitType, ResourceType } from '../plans/constants/plan-features';
 
 @Injectable()
 export class ScanService {

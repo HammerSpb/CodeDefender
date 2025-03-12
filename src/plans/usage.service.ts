@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { ResourceType } from '../constants/plan-features';
+import { PrismaService } from '../prisma/prisma.service';
+import { ResourceType } from './constants/plan-features';
 
 @Injectable()
 export class UsageService {

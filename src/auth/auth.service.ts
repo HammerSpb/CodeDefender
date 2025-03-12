@@ -1,14 +1,18 @@
 import { PrismaService } from '@/prisma/prisma.service';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { LoginDto } from './dto/login.dto';
+import { Plan, WorkspaceRole } from '@prisma/client';
+import { AuditLogsService } from '@/audit-logs/audit-logs.service';
+import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private jwtService: JwtService,
     private prismaService: PrismaService,
+    private auditLogsService: AuditLogsService,
   ) {}
 
   async validateUser(email: string, password: string) {
@@ -37,7 +41,18 @@ export class AuthService {
       sub: user.id,
       role: user.role,
       ownerId: user.ownerId,
+      plan: user.plan,
     };
+
+    // Log the login action
+    await this.auditLogsService.create({
+      userId: user.id,
+      action: 'USER_LOGIN',
+      details: {
+        email: user.email,
+        timestamp: new Date().toISOString(),
+      },
+    });
 
     return {
       accessToken: this.jwtService.sign(payload),
@@ -47,7 +62,120 @@ export class AuthService {
         role: user.role,
         orgName: user.orgName,
         plan: user.plan,
+        firstName: user.firstName,
+        lastName: user.lastName,
       },
     };
+  }
+
+  /**
+   * Register a new user
+   */
+  async register(registerDto: RegisterDto) {
+    const { email, password, firstName, lastName, orgName } = registerDto;
+
+    // Check if user with email already exists
+    const existingUser = await this.prismaService.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      throw new BadRequestException(`User with email ${email} already exists`);
+    }
+
+    try {
+      // Start a transaction to create user, assign default role, and create workspace
+      return await this.prismaService.$transaction(async (prisma) => {
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create the user with default MEMBER role and STARTER plan
+        const user = await prisma.user.create({
+          data: {
+            email,
+            password: hashedPassword,
+            firstName,
+            lastName,
+            role: 'MEMBER', // Default role
+            orgName,
+            plan: Plan.STARTER,
+          },
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            orgName: true,
+            plan: true,
+            createdAt: true,
+          },
+        });
+
+        // Find default Member role
+        const defaultRole = await prisma.role.findUnique({
+          where: { name: 'Member' },
+        });
+
+        if (defaultRole) {
+          // Assign default role
+          await prisma.userRoleAssignment.create({
+            data: {
+              userId: user.id,
+              roleId: defaultRole.id,
+            },
+          });
+        }
+
+        // Create personal workspace for the user
+        const workspaceName = orgName 
+          ? `${orgName} Workspace` 
+          : `${firstName || 'Personal'}'s Workspace`;
+          
+        const workspace = await prisma.workspace.create({
+          data: {
+            name: workspaceName,
+            ownerId: user.id,
+          },
+        });
+
+        // Add user to workspace as ADMIN
+        await prisma.userWorkspace.create({
+          data: {
+            userId: user.id,
+            workspaceId: workspace.id,
+            role: WorkspaceRole.ADMIN,
+          },
+        });
+
+        // Log the registration
+        await this.auditLogsService.create({
+          userId: user.id,
+          workspaceId: workspace.id,
+          action: 'USER_REGISTRATION',
+          details: {
+            email: user.email,
+            plan: Plan.STARTER,
+            workspace: workspaceName,
+          },
+        });
+
+        // Generate JWT token
+        const payload = {
+          email: user.email,
+          sub: user.id,
+          role: user.role,
+          plan: user.plan,
+        };
+
+        return {
+          accessToken: this.jwtService.sign(payload),
+          user,
+          workspace,
+        };
+      });
+    } catch (error) {
+      throw new BadRequestException(`Registration failed: ${error.message}`);
+    }
   }
 }

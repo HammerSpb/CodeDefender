@@ -6,7 +6,7 @@ import { PermissionsModule } from '../permissions/permissions.module';
 import { FeatureGuard } from './guards/feature.guard';
 import { LimitGuard } from './guards/limit.guard';
 import { UnifiedPolicyGuard } from './guards/unified-policy.guard';
-import { UsageService } from './services/usage.service';
+import { UsageService } from './usage.service';
 
 @Module({
   imports: [

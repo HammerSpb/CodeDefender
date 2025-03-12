@@ -1,11 +1,11 @@
 import { applyDecorators, UseGuards } from '@nestjs/common';
-import { RequiresPermission } from '../../permissions/decorators/requires-permission.decorator';
-import { RequiresFeature, CheckLimit } from '../../plans/decorators/requires-feature.decorator';
-import { Feature, LimitType } from '../../plans/constants/plan-features';
-import { PERMISSION_CODES } from '../../permissions/constants/permission-codes';
-import { PermissionGuard } from '../../permissions/guards/permission.guard';
-import { FeatureGuard } from '../../plans/guards/feature.guard';
-import { LimitGuard } from '../../plans/guards/limit.guard';
+import { RequiresPermission } from '../permissions/decorators/requires-permission.decorator';
+import { RequiresFeature, CheckLimit } from '../plans/decorators/requires-feature.decorator';
+import { Feature, LimitType } from '../plans/constants/plan-features';
+import { PERMISSION_CODES } from '../permissions/constants/permission-codes';
+import { PermissionGuard } from '../permissions/guards/permission.guard';
+import { FeatureGuard } from '../plans/guards/feature.guard';
+import { LimitGuard } from '../plans/guards/limit.guard';
 
 /**
  * Combined decorator for scan creation

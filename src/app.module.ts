@@ -6,14 +6,17 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerModule, ThrottlerModuleOptions } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
+import { AnalyticsModule } from './analytics/analytics.module';
 import { AuditLogsModule } from './audit-logs/audit-logs.module';
 import { AuthModule } from './auth/auth.module';
+import { BillingModule } from './billing/billing.module';
 import { CommonModule } from './common/common.module';
 import { PolicyGuard } from './common/guards/policy.guard';
 import { PermissionsModule } from './permissions/permissions.module';
 import { PlansModule } from './plans/plans.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RepositoriesModule } from './repositories/repositories.module';
+import { RolesModule } from './roles/roles.module';
 import { ScansModule } from './scans/scans.module';
 import { SchedulesModule } from './schedules/schedules.module';
 import { UsersModule } from './users/users.module';
@@ -84,6 +87,9 @@ import { WorkspacesModule } from './workspaces/workspaces.module';
     ScansModule,
     SchedulesModule,
     AuditLogsModule,
+    RolesModule,
+    BillingModule,
+    AnalyticsModule,
   ],
   providers: [
     {

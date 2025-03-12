@@ -10,13 +10,13 @@ import {
   Query,
   ForbiddenException,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { RequiresPolicy } from '../../plans/decorators/requires-policy.decorator';
-import { RequiresFeature } from '../../plans/decorators/requires-feature.decorator';
-import { CheckLimit } from '../../plans/decorators/requires-feature.decorator';
-import { Feature, LimitType, ResourceType } from '../../plans/constants/plan-features';
-import { PERMISSION_CODES } from '../../permissions/constants/permission-codes';
-import { UsageService } from '../../plans/services/usage.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RequiresPolicy } from '../plans/decorators/requires-policy.decorator';
+import { RequiresFeature } from '../plans/decorators/requires-feature.decorator';
+import { CheckLimit } from '../plans/decorators/requires-feature.decorator';
+import { Feature, LimitType, ResourceType } from '../plans/constants/plan-features';
+import { PERMISSION_CODES } from '../permissions/constants/permission-codes';
+import { UsageService } from '../plans/usage.service';
 
 @Controller('scans')
 @UseGuards(JwtAuthGuard)

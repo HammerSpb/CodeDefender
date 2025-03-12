@@ -5,6 +5,8 @@ CodeDefender is a security scanning and management platform for code repositorie
 ## Features
 
 - **User Management**: Manage users with different roles (super, owner, admin, member, support)
+- **Role-Based Access Control**: Granular permission system based on roles and plans
+- **Plan-Based Features**: Feature availability based on subscription plans
 - **Workspace Management**: Organize repositories and scans in workspaces
 - **Repository Integration**: Connect to GitHub, GitLab, and Bitbucket repositories
 - **Security Scanning**: Scan repositories for secrets, vulnerabilities, and non-code files
@@ -161,6 +163,11 @@ code-defender/
 │   ├── scans/              # Scans module
 │   ├── schedules/          # Schedules module
 │   ├── audit-logs/         # Audit logs module
+│   ├── permissions/        # Permissions system
+│   ├── plans/              # Plan-based features
+│   ├── roles/              # Role management
+│   ├── billing/            # Billing and plan upgrades
+│   ├── analytics/          # Usage analytics and reporting
 │   ├── prisma/             # Prisma service
 │   ├── app.module.ts       # Main application module
 │   └── main.ts             # Application entry point
