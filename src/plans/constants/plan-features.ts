@@ -192,6 +192,7 @@ export enum ResourceType {
   REPOSITORY = 'REPOSITORY',
   USER = 'USER',
   ALERT = 'ALERT',
+  SCHEDULE = 'SCHEDULE',
 }
 
 export enum LimitType {

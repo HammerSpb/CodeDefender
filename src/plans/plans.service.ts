@@ -12,6 +12,7 @@ import {
   PLAN_FEATURES, 
   PLAN_LIMITS 
 } from './constants/plan-features';
+import { planHasPermission, getMinimumPlanForPermission, getPermissionUpgradeMessage } from './maps/plan-permission.map';
 
 @Injectable()
 export class PlansService {
@@ -22,6 +23,42 @@ export class PlansService {
     private prisma: PrismaService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
+
+  /**
+   * Check if a plan has a specific permission
+   * @param plan User's plan
+   * @param permissionCode Permission code to check
+   */
+  planHasPermission(plan: Plan, permissionCode: string): boolean {
+    return planHasPermission(plan, permissionCode);
+  }
+
+  /**
+   * Check if a user's plan includes a specific permission
+   * @param userId User ID
+   * @param permissionCode Permission code to check
+   */
+  async userHasPermissionInPlan(userId: string, permissionCode: string): Promise<boolean> {
+    const plan = await this.getUserPlan(userId);
+    return this.planHasPermission(plan, permissionCode);
+  }
+
+  /**
+   * Get the minimum plan required for a permission
+   * @param permissionCode Permission code to check
+   */
+  getMinimumPlanForPermission(permissionCode: string): Plan | null {
+    return getMinimumPlanForPermission(permissionCode);
+  }
+
+  /**
+   * Get upgrade message for a permission that's not in the current plan
+   * @param permissionCode Permission code
+   * @param currentPlan Current plan
+   */
+  getPermissionUpgradeMessage(permissionCode: string, currentPlan: Plan): string | null {
+    return getPermissionUpgradeMessage(permissionCode, currentPlan);
+  }
 
   /**
    * Check if a plan has a specific feature

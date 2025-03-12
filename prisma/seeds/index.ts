@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { seedPermissions, seedRoles } from './common/permissions.seed';
 import { seedSuperUser } from './common/users.seed';
+import { seedPlanPermissions } from './plan-permissions';
 
 const prisma = new PrismaClient();
 
@@ -12,6 +13,7 @@ async function main() {
     await seedPermissions(prisma);
     await seedRoles(prisma);
     await seedSuperUser(prisma);
+    await seedPlanPermissions(prisma);
     
     console.log('Database seeding completed successfully!');
   } catch (error) {
@@ -35,4 +37,4 @@ if (require.main === module) {
     });
 }
 
-export { seedPermissions, seedRoles, seedSuperUser };
+export { seedPermissions, seedRoles, seedSuperUser, seedPlanPermissions };

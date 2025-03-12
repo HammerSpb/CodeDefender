@@ -8,6 +8,8 @@ import { Module } from '@nestjs/common';
 import { ScansController } from './scans.controller';
 import { ScansProcessor } from './scans.processor';
 import { ScansService } from './scans.service';
+import { ScanController } from './controllers/scan.controller';
+import { ScanService } from './services/scan.service';
 
 @Module({
   imports: [
@@ -20,8 +22,8 @@ import { ScansService } from './scans.service';
       name: 'scans',
     }),
   ],
-  controllers: [ScansController],
-  providers: [ScansService, ScansProcessor],
+  controllers: [ScansController, ScanController],
+  providers: [ScansService, ScansProcessor, ScanService],
   exports: [ScansService],
 })
 export class ScansModule {}
