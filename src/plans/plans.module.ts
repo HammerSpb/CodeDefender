@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
 import { PlansService } from './plans.service';
 import { PrismaModule } from '../prisma/prisma.module';
@@ -11,7 +11,7 @@ import { UsageService } from './services/usage.service';
 @Module({
   imports: [
     PrismaModule,
-    PermissionsModule,
+    forwardRef(() => PermissionsModule),
     CacheModule.register({
       ttl: 300, // 5 minutes in seconds
     }),

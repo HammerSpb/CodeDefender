@@ -1,6 +1,7 @@
 import { SetMetadata, applyDecorators, UseGuards } from '@nestjs/common';
-import { UnifiedPolicyGuard, PolicyOptions, POLICY_OPTIONS_KEY } from '../guards/unified-policy.guard';
+import { UnifiedPolicyGuard } from '../guards/unified-policy.guard';
 import { Feature, LimitType } from '../constants/plan-features';
+import { PolicyOptions, POLICY_OPTIONS_KEY } from '../types/policy-types';
 
 /**
  * Creates a unified policy that can combine permission, feature, and limit checks

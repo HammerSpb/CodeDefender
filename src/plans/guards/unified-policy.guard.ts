@@ -1,27 +1,9 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException, UnauthorizedException, Logger, Inject, forwardRef } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PermissionsService } from '../../permissions/permissions.service';
 import { Feature, LimitType, PLAN_UPGRADE_MESSAGES } from '../constants/plan-features';
 import { PlansService } from '../plans.service';
-
-export interface PolicyOptions {
-  permissionCode?: string;
-  requiredFeatures?: Feature[];
-  limitType?: LimitType;
-  requireAll?: boolean;
-  errorMessage?: string;
-  showUpgradePrompt?: boolean;
-  allowSuper?: boolean;
-}
-
-export const POLICY_OPTIONS_KEY = 'policy_options';
+import { PolicyOptions, POLICY_OPTIONS_KEY } from '../types/policy-types';
 
 @Injectable()
 export class UnifiedPolicyGuard implements CanActivate {
@@ -30,6 +12,7 @@ export class UnifiedPolicyGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private plansService: PlansService,
+    @Inject(forwardRef(() => PermissionsService))
     private permissionsService: PermissionsService,
   ) {}
 
