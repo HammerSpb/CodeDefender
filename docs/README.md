@@ -1,33 +1,63 @@
 # CodeDefender Documentation
 
-This directory contains comprehensive documentation for the CodeDefender application.
+Welcome to the CodeDefender documentation. This documentation is intended for developers building and maintaining the CodeDefender application.
 
-## Table of Contents
+## Documentation Sections
 
-### Authorization
-- [Permission System](authorization/permissions.md) - Role-based access control and plan-based features
-- [Auth Fixes March 2025](fixes/auth-fix-march2025.md) - Recent fixes to the authentication system
+### Authorization System
+
+- [Authorization System Overview](./authorization/README.md)
+- [Core Concepts](./authorization/core-concepts.md)
+- [Permissions Reference](./authorization/permissions.md)
+- [Guards & Decorators](./authorization/guards-decorators.md)
+- [Developer Guides](./authorization/guides/)
+  - [Adding New Permissions](./authorization/guides/adding-permissions.md)
+  - [Securing New Endpoints](./authorization/guides/securing-endpoints.md)
+  - [Working with Plans & Features](./authorization/guides/working-with-plans.md)
+  - [Implementing Usage Limits](./authorization/guides/implementing-limits.md)
+
+### API Documentation
+
+- [API Overview](./api/README.md)
+- [Authentication API](./api/authentication.md)
+- [Scans API](./api/scans.md)
 
 ### Database
-- [Seeding](database/seeds.md) - Database seed system and data population
+
+- [Database Schema](./database/schema.md)
+- [Migrations](./database/migrations.md)
+- [Seeding Data](./database/seeding.md)
 
 ### Development
-- [Commands](development/commands.md) - Development scripts and workflows
 
-### Fixes & Updates
-- [Auth System Fixes (March 2025)](fixes/auth-fix-march2025.md) - Fixes for the authentication and authorization system
+- [Development Environment Setup](./development/setup.md)
+- [Coding Guidelines](./development/coding-guidelines.md)
+- [Testing Strategy](./development/testing.md)
 
-## Development Guidelines
+### Plans
 
-When extending or modifying CodeDefender:
+- [Subscription Plans Overview](./plans/README.md)
+- [Using Plan-Based Access](./plans/using-plan-based-access.md)
 
-1. Update relevant documentation when making code changes
-2. Follow the established patterns for permissions and features
-3. Use the centralized constants for permissions rather than hardcoded strings
-4. Test authorization rules thoroughly
-5. Keep documentation in sync with code
+## Documentation Guidelines
 
-## Additional Resources
+When extending or modifying CodeDefender documentation:
 
-- External documentation: [docs.codedefender.com](https://docs.codedefender.com)
-- API Reference: `/api/docs` (Swagger UI)
+1. **Keep Documentation in Sync** - Update documentation when code changes
+2. **Follow Markdown Standards** - Use consistent formatting
+3. **Include Examples** - Provide code examples for complex concepts
+4. **Document Authorization** - Always include authorization requirements
+5. **Be Concise** - Write clearly and concisely
+
+## Contributing
+
+To contribute to the documentation:
+
+1. Create a branch with your changes
+2. Update relevant documentation files
+3. Submit a pull request for review
+4. Address any feedback from reviewers
+
+## License
+
+This documentation is proprietary and confidential.
