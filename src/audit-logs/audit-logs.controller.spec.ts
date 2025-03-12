@@ -27,6 +27,8 @@ describe('AuditLogsController', () => {
     sub: 'super-user-id',
     email: 'super@example.com',
     role: UserRole.SUPER,
+    mfaSecret: null,
+    mfaEnabled: false,
   };
 
   // Owner user
@@ -35,6 +37,8 @@ describe('AuditLogsController', () => {
     sub: 'owner-id',
     email: 'owner@example.com',
     role: UserRole.OWNER,
+    mfaSecret: null,
+    mfaEnabled: false,
   };
 
   // Regular member user
@@ -43,6 +47,8 @@ describe('AuditLogsController', () => {
     sub: 'member-id',
     email: 'member@example.com',
     role: UserRole.MEMBER,
+    mfaSecret: null,
+    mfaEnabled: false,
   };
 
   beforeEach(async () => {

@@ -1,11 +1,11 @@
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { UserRole } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
-import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
-import { UserRole, Plan } from '@prisma/client';
-import * as bcrypt from 'bcryptjs';
+import { UsersService } from './users.service';
 
 // Mock bcrypt
 jest.mock('bcryptjs', () => ({
@@ -20,13 +20,17 @@ describe('UsersService', () => {
   const mockDate = new Date();
   const mockUser = {
     id: 'user-id',
+    firstName: '',
+    lastName: '',
     email: 'test@example.com',
     password: 'hashed-password',
     role: UserRole.OWNER,
+    mfaSecret: null,
+    mfaEnabled: false,
     provider: null,
     providerId: null,
     orgName: null,
-    plan: Plan.PRO,
+    plan: Plan.PRO, firstName: null, lastName: null, mfaSecret: null, mfaEnabled: false,
     ownerId: null,
     createdAt: mockDate,
     updatedAt: mockDate,
@@ -90,8 +94,10 @@ describe('UsersService', () => {
       email: 'new@example.com',
       password: 'password123',
       role: UserRole.MEMBER,
+    mfaSecret: null,
+    mfaEnabled: false,
       orgName: 'New Org',
-      plan: Plan.PRO,
+      plan: Plan.PRO, firstName: null, lastName: null, mfaSecret: null, mfaEnabled: false,
       ownerId: 'owner-id',
     };
 
@@ -101,7 +107,9 @@ describe('UsersService', () => {
         id: 'new-user-id',
         email: createDto.email,
         password: 'hashed-password',
-        role: UserRole.MEMBER, // Using concrete enum value instead of createDto.role
+        role: UserRole.MEMBER,
+    mfaSecret: null,
+    mfaEnabled: false, // Using concrete enum value instead of createDto.role
         provider: null,
         providerId: null,
         orgName: createDto.orgName || null,
@@ -141,11 +149,13 @@ describe('UsersService', () => {
           createdAt: true,
         },
       });
-      expect(result).toEqual(expect.objectContaining({
-        id: createdUser.id,
-        email: createdUser.email,
-        role: createdUser.role,
-      }));
+      expect(result).toEqual(
+        expect.objectContaining({
+          id: createdUser.id,
+          email: createdUser.email,
+          role: createdUser.role,
+        }),
+      );
     });
 
     it('should throw ConflictException if user with email already exists', async () => {
@@ -239,6 +249,8 @@ describe('UsersService', () => {
     const updateDto: UpdateUserDto = {
       email: 'updated@example.com',
       role: UserRole.ADMIN,
+    mfaSecret: null,
+    mfaEnabled: false,
     };
 
     it('should update a user successfully without password', async () => {
@@ -283,7 +295,7 @@ describe('UsersService', () => {
         ...updateDto,
         password: 'newpassword123',
       };
-      
+
       const updatedUser = {
         ...mockUser,
         email: updateDto.email ?? mockUser.email,

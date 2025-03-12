@@ -1,6 +1,8 @@
 import { AuditLogsModule } from '@/audit-logs/audit-logs.module';
 import { CommonModule } from '@/common/common.module';
 import { PrismaModule } from '@/prisma/prisma.module';
+import { PermissionsModule } from '@/permissions/permissions.module';
+import { PlansModule } from '@/plans/plans.module';
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { ScansController } from './scans.controller';
@@ -12,6 +14,8 @@ import { ScansService } from './scans.service';
     PrismaModule,
     AuditLogsModule,
     CommonModule,
+    PermissionsModule,
+    PlansModule,
     BullModule.registerQueue({
       name: 'scans',
     }),

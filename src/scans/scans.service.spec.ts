@@ -1,11 +1,11 @@
-import { AuditLogsService } from '@/audit-logs/audit-logs.service';
-import { PrismaService } from '@/prisma/prisma.service';
-import { Test, TestingModule } from '@nestjs/testing';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { getQueueToken } from '@nestjs/bull';
-import { ScanStatus, UserRole, WorkspaceRole } from '@prisma/client';
-import { CreateScanDto } from './dto/create-scan.dto';
-import { ScansService } from './scans.service';
+import {  AuditLogsService } from '@/audit-logs/audit-logs.service';
+import { Plan,  PrismaService } from '@/prisma/prisma.service';
+import { Plan,  getQueueToken } from '@nestjs/bull';
+import { Plan,  ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Plan,  Test, TestingModule } from '@nestjs/testing';
+import { Plan,  ScanStatus, UserRole, WorkspaceRole } from '@prisma/client';
+import { Plan,  CreateScanDto } from './dto/create-scan.dto';
+import { Plan,  ScansService } from './scans.service';
 
 describe('ScansService', () => {
   let service: ScansService;
@@ -17,13 +17,17 @@ describe('ScansService', () => {
   const mockDate = new Date();
   const mockUser = {
     id: 'user-id',
+    firstName: '',
+    lastName: '',
     email: 'test@example.com',
     password: 'hashed-password',
     role: UserRole.OWNER,
+    mfaSecret: null,
+    mfaEnabled: false,
     provider: null,
     providerId: null,
     orgName: null,
-    plan: null,
+    plan: Plan.PRO, firstName: null, lastName: null, mfaSecret: null, mfaEnabled: false,
     ownerId: null,
     createdAt: mockDate,
     updatedAt: mockDate,
@@ -33,6 +37,8 @@ describe('ScansService', () => {
     ...mockUser,
     id: 'admin-id',
     role: UserRole.ADMIN,
+    mfaSecret: null,
+    mfaEnabled: false,
   };
 
   const mockWorkspace = {
@@ -207,9 +213,9 @@ describe('ScansService', () => {
 
     it('should create a scan successfully as super admin', async () => {
       // Arrange
-      const superAdmin = { ...mockUser, id: 'super-id', role: UserRole.SUPER };
+      const superAdmin = { ...mockUser, id: 'super-id',
       const workspaceWithDifferentOwner = { ...mockWorkspace, ownerId: 'other-owner-id', userWorkspaces: [] };
-      
+
       jest.spyOn(prismaService.workspace, 'findUnique').mockResolvedValue(workspaceWithDifferentOwner);
       jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(superAdmin);
       jest.spyOn(prismaService.scan, 'create').mockResolvedValue(mockScan);
@@ -234,9 +240,9 @@ describe('ScansService', () => {
 
     it('should throw ForbiddenException if user is not owner or admin', async () => {
       // Arrange
-      const regularUser = { ...mockUser, id: 'regular-user-id', role: UserRole.MEMBER };
+      const regularUser = { ...mockUser, id: 'regular-user-id',
       const workspaceWithDifferentOwner = { ...mockWorkspace, ownerId: 'other-owner-id', userWorkspaces: [] };
-      
+
       jest.spyOn(prismaService.workspace, 'findUnique').mockResolvedValue(workspaceWithDifferentOwner);
       jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(regularUser);
 
@@ -285,9 +291,9 @@ describe('ScansService', () => {
 
     it('should throw ForbiddenException if user does not have access to workspace', async () => {
       // Arrange
-      const regularUser = { ...mockUser, id: 'regular-user-id', role: UserRole.MEMBER };
+      const regularUser = { ...mockUser, id: 'regular-user-id',
       const workspaceWithDifferentOwner = { ...mockWorkspace, ownerId: 'other-owner-id', userWorkspaces: [] };
-      
+
       jest.spyOn(prismaService.workspace, 'findUnique').mockResolvedValue(workspaceWithDifferentOwner);
       jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(regularUser);
 
@@ -334,7 +340,7 @@ describe('ScansService', () => {
 
     it('should throw ForbiddenException if user does not have access to workspace', async () => {
       // Arrange
-      const regularUser = { ...mockUser, id: 'regular-user-id', role: UserRole.MEMBER };
+      const regularUser = { ...mockUser, id: 'regular-user-id',
       const scanWithDifferentOwner = {
         ...mockScanWithWorkspace,
         workspace: {
@@ -342,7 +348,7 @@ describe('ScansService', () => {
           ownerId: 'other-owner-id',
         },
       };
-      
+
       jest.spyOn(prismaService.scan, 'findUnique').mockResolvedValue(scanWithDifferentOwner);
       jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(regularUser);
 
@@ -395,7 +401,7 @@ describe('ScansService', () => {
 
     it('should throw ForbiddenException if user is not owner or admin', async () => {
       // Arrange
-      const regularUser = { ...mockUser, id: 'regular-user-id', role: UserRole.MEMBER };
+      const regularUser = { ...mockUser, id: 'regular-user-id',
       const scanWithDifferentOwner = {
         ...mockScanWithWorkspace,
         workspace: {
@@ -404,7 +410,7 @@ describe('ScansService', () => {
           userWorkspaces: [],
         },
       };
-      
+
       jest.spyOn(prismaService.scan, 'findUnique').mockResolvedValue(scanWithDifferentOwner);
       jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(regularUser);
 
@@ -422,7 +428,7 @@ describe('ScansService', () => {
         ...mockScan,
         status: ScanStatus.RUNNING,
       };
-      
+
       jest.spyOn(prismaService.scan, 'findUnique').mockResolvedValue(mockScan);
       jest.spyOn(prismaService.scan, 'update').mockResolvedValue(updatedScan);
 
@@ -449,7 +455,7 @@ describe('ScansService', () => {
         results,
         completedAt: expect.any(Date),
       };
-      
+
       jest.spyOn(prismaService.scan, 'findUnique').mockResolvedValue(mockScan);
       jest.spyOn(prismaService.scan, 'update').mockResolvedValue(completedScan);
 

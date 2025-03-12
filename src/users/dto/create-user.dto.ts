@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Plan, UserRole } from '@prisma/client';
-import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
+import { IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
 
 export class CreateUserDto {
   @ApiProperty({
@@ -20,6 +20,22 @@ export class CreateUserDto {
   @IsNotEmpty()
   @MinLength(8)
   password: string;
+
+  @ApiPropertyOptional({
+    description: 'User first name',
+    example: 'John',
+  })
+  @IsString()
+  @IsOptional()
+  firstName?: string;
+
+  @ApiPropertyOptional({
+    description: 'User last name',
+    example: 'Doe',
+  })
+  @IsString()
+  @IsOptional()
+  lastName?: string;
 
   @ApiPropertyOptional({
     description: 'User role',
@@ -53,4 +69,19 @@ export class CreateUserDto {
   @IsUUID()
   @IsOptional()
   ownerId?: string;
+
+  @ApiPropertyOptional({
+    description: 'MFA secret',
+  })
+  @IsString()
+  @IsOptional()
+  mfaSecret?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'MFA enabled status',
+    default: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  mfaEnabled?: boolean;
 }

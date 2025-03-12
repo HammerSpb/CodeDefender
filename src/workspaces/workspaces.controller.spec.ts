@@ -67,6 +67,8 @@ describe('WorkspacesController', () => {
           id: 'user-id',
           email: 'test@example.com',
           role: UserRole.OWNER,
+    mfaSecret: null,
+    mfaEnabled: false,
         },
       },
     ],
@@ -85,6 +87,8 @@ describe('WorkspacesController', () => {
       id: 'new-user-id',
       email: 'newuser@example.com',
       role: UserRole.MEMBER,
+    mfaSecret: null,
+    mfaEnabled: false,
     },
   };
 

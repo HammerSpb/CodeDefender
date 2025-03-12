@@ -16,6 +16,8 @@ describe('ScansController', () => {
     sub: 'user-id',
     email: 'test@example.com',
     role: UserRole.OWNER,
+    mfaSecret: null,
+    mfaEnabled: false,
   };
 
   const mockScan = {

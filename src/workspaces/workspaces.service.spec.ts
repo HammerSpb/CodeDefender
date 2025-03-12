@@ -1,11 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { PrismaService } from '../prisma/prisma.service';
-import { WorkspacesService } from './workspaces.service';
-import { CreateWorkspaceDto } from './dto/create-workspace.dto';
-import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
-import { AddUserToWorkspaceDto } from './dto/add-user-to-workspace.dto';
-import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
-import { WorkspaceRole, UserRole } from '@prisma/client';
+import {  BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Plan,  Test, TestingModule } from '@nestjs/testing';
+import { Plan,  UserRole, WorkspaceRole } from '@prisma/client';
+import { Plan,  PrismaService } from '../prisma/prisma.service';
+import { Plan,  AddUserToWorkspaceDto } from './dto/add-user-to-workspace.dto';
+import { Plan,  CreateWorkspaceDto } from './dto/create-workspace.dto';
+import { Plan,  UpdateWorkspaceDto } from './dto/update-workspace.dto';
+import { Plan,  WorkspacesService } from './workspaces.service';
 
 describe('WorkspacesService', () => {
   let service: WorkspacesService;
@@ -15,13 +15,17 @@ describe('WorkspacesService', () => {
   const mockDate = new Date();
   const mockUser = {
     id: 'user-id',
+    firstName: '',
+    lastName: '',
     email: 'test@example.com',
     password: 'hashed-password',
     role: UserRole.OWNER,
+    mfaSecret: null,
+    mfaEnabled: false,
     provider: null,
     providerId: null,
     orgName: null,
-    plan: null,
+    plan: Plan.PRO, firstName: null, lastName: null, mfaSecret: null, mfaEnabled: false,
     ownerId: null,
     createdAt: mockDate,
     updatedAt: mockDate,
@@ -37,6 +41,8 @@ describe('WorkspacesService', () => {
     ...mockUser,
     id: 'admin-id',
     role: UserRole.ADMIN,
+    mfaSecret: null,
+    mfaEnabled: false,
   };
 
   const mockWorkspace = {
@@ -198,7 +204,7 @@ describe('WorkspacesService', () => {
           role: WorkspaceRole.MEMBER,
           createdAt: mockDate,
           updatedAt: mockDate,
-          workspace: { ...mockWorkspaceWithIncludes, id: 'workspace-2', name: 'Another Workspace' }
+          workspace: { ...mockWorkspaceWithIncludes, id: 'workspace-2', name: 'Another Workspace' },
         },
       ];
 
@@ -241,7 +247,7 @@ describe('WorkspacesService', () => {
           },
         },
       });
-      
+
       // Should return combined workspaces without duplicates
       expect(result).toHaveLength(2);
       expect(result[0].id).toBe(mockWorkspaceWithIncludes.id);
@@ -312,11 +318,13 @@ describe('WorkspacesService', () => {
               id: memberUserId,
               email: 'member@example.com',
               role: UserRole.MEMBER,
+    mfaSecret: null,
+    mfaEnabled: false,
             },
           },
         ],
       };
-      
+
       jest.spyOn(prismaService.workspace, 'findUnique').mockResolvedValue(workspaceWithMember);
 
       // Act
@@ -522,8 +530,10 @@ describe('WorkspacesService', () => {
         ...mockWorkspace,
         ownerId: 'other-owner-id',
       });
-      jest.spyOn(prismaService.userWorkspace, 'findUnique')
-        .mockResolvedValueOnce({ // First call: check if admin has access
+      jest
+        .spyOn(prismaService.userWorkspace, 'findUnique')
+        .mockResolvedValueOnce({
+          // First call: check if admin has access
           userId: adminId,
           workspaceId,
           role: WorkspaceRole.ADMIN,

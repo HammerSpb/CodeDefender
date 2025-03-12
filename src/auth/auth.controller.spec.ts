@@ -1,9 +1,9 @@
-import { UnauthorizedException } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
-import { UserRole } from '@prisma/client';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
+import {  UnauthorizedException } from '@nestjs/common';
+import { Plan,  Test, TestingModule } from '@nestjs/testing';
+import { Plan,  UserRole } from '@prisma/client';
+import { Plan,  AuthController } from './auth.controller';
+import { Plan,  AuthService } from './auth.service';
+import { Plan,  LoginDto } from './dto/login.dto';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -21,8 +21,10 @@ describe('AuthController', () => {
       id: 'user-id',
       email: 'test@example.com',
       role: UserRole.OWNER,
+    mfaSecret: null,
+    mfaEnabled: false,
       orgName: null,
-      plan: null,
+      plan: Plan.PRO, firstName: null, lastName: null, mfaSecret: null, mfaEnabled: false,
     },
   };
 

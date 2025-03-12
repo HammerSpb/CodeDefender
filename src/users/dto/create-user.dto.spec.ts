@@ -1,6 +1,6 @@
 import { validate } from 'class-validator';
 import { CreateUserDto } from './create-user.dto';
-import { Plan, UserRole } from '@prisma/client';
+import { UserRole } from '@prisma/client';
 
 describe('CreateUserDto', () => {
   it('should validate a valid DTO', async () => {
@@ -21,6 +21,8 @@ describe('CreateUserDto', () => {
     const dto = new CreateUserDto();
     dto.email = 'user@example.com';
     dto.password = 'password123';
+    dto.firstName = 'John';
+    dto.lastName = 'Doe';
     dto.role = UserRole.ADMIN;
     dto.orgName = 'Test Organization';
     dto.plan = Plan.ENTERPRISE;

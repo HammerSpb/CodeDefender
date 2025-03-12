@@ -1,6 +1,6 @@
 import { validate } from 'class-validator';
 import { UpdateUserDto } from './update-user.dto';
-import { Plan, UserRole } from '@prisma/client';
+import { UserRole } from '@prisma/client';
 
 describe('UpdateUserDto', () => {
   it('should validate an empty DTO (all fields optional)', async () => {

@@ -36,6 +36,15 @@ export class CreateScanDto {
   historical?: boolean;
 
   @ApiProperty({
+    description: 'Whether to use advanced scanning options',
+    example: false,
+    default: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isAdvanced?: boolean;
+
+  @ApiProperty({
     description: 'Files or directories to exclude from the scan',
     example: ['node_modules', '.git'],
     type: [String],

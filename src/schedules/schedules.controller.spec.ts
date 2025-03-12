@@ -17,6 +17,8 @@ describe('SchedulesController', () => {
     sub: 'user-id',
     email: 'test@example.com',
     role: UserRole.OWNER,
+    mfaSecret: null,
+    mfaEnabled: false,
   };
 
   const mockSchedule = {
@@ -173,7 +175,7 @@ describe('SchedulesController', () => {
 
     it('should trigger a scheduled scan', async () => {
       // Arrange
-      const mockScan = { id: 'scan-id', status: 'PENDING' };
+      const mockScan = { id: 'scan-id',
       jest.spyOn(service, 'triggerScan').mockResolvedValue(mockScan as any);
 
       // Act

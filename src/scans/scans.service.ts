@@ -106,6 +106,40 @@ export class ScansService {
     });
   }
 
+  async findHistoricalByWorkspace(workspaceId: string, userId: string): Promise<Scan[]> {
+    // Check if the user has access to the workspace
+    const workspace = await this.prismaService.workspace.findUnique({
+      where: { id: workspaceId },
+      include: {
+        userWorkspaces: {
+          where: { userId },
+        },
+      },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
+    const user = await this.prismaService.user.findUnique({
+      where: { id: userId },
+    });
+
+    // Check permissions
+    if (user?.role !== UserRole.SUPER && workspace.ownerId !== userId && workspace.userWorkspaces.length === 0) {
+      throw new ForbiddenException('You do not have access to this workspace');
+    }
+
+    // Get historical scans for the workspace
+    return this.prismaService.scan.findMany({
+      where: { 
+        workspaceId,
+        historical: true
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async findOne(id: string, userId: string): Promise<Scan> {
     const scan = await this.prismaService.scan.findUnique({
       where: { id },

@@ -1,5 +1,6 @@
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
+import { CacheModule } from '@nestjs/cache-manager';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
@@ -7,7 +8,10 @@ import { ThrottlerModule, ThrottlerModuleOptions } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { AuditLogsModule } from './audit-logs/audit-logs.module';
 import { AuthModule } from './auth/auth.module';
-import { RolesGuard } from './common/guards/roles.guard';
+import { CommonModule } from './common/common.module';
+import { PolicyGuard } from './common/guards/policy.guard';
+import { PermissionsModule } from './permissions/permissions.module';
+import { PlansModule } from './plans/plans.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RepositoriesModule } from './repositories/repositories.module';
 import { ScansModule } from './scans/scans.module';
@@ -65,7 +69,14 @@ import { WorkspacesModule } from './workspaces/workspaces.module';
         },
       }),
     }),
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 300, // 5 minutes in seconds
+    }),
     PrismaModule,
+    PermissionsModule,
+    PlansModule,
+    CommonModule,
     AuthModule,
     UsersModule,
     WorkspacesModule,
@@ -77,7 +88,7 @@ import { WorkspacesModule } from './workspaces/workspaces.module';
   providers: [
     {
       provide: APP_GUARD,
-      useClass: RolesGuard,
+      useClass: PolicyGuard,
     },
   ],
 })

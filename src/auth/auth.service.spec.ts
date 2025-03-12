@@ -1,11 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { PrismaService } from '../prisma/prisma.service';
-import { AuthService } from './auth.service';
-import { JwtService } from '@nestjs/jwt';
-import { UnauthorizedException } from '@nestjs/common';
-import { LoginDto } from './dto/login.dto';
-import { UserRole } from '@prisma/client';
+import {  UnauthorizedException } from '@nestjs/common';
+import { Plan,  JwtService } from '@nestjs/jwt';
+import { Plan,  Test, TestingModule } from '@nestjs/testing';
+import { Plan,  UserRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { Plan,  PrismaService } from '../prisma/prisma.service';
+import { Plan,  AuthService } from './auth.service';
+import { Plan,  LoginDto } from './dto/login.dto';
 
 // Mock bcrypt
 jest.mock('bcryptjs', () => ({
@@ -21,13 +21,17 @@ describe('AuthService', () => {
   const mockDate = new Date();
   const mockUser = {
     id: 'user-id',
+    firstName: '',
+    lastName: '',
     email: 'test@example.com',
     password: 'hashed-password',
     role: UserRole.OWNER,
+    mfaSecret: null,
+    mfaEnabled: false,
     provider: null,
     providerId: null,
     orgName: null,
-    plan: null,
+    plan: Plan.PRO, firstName: null, lastName: null, mfaSecret: null, mfaEnabled: false,
     ownerId: null,
     createdAt: mockDate,
     updatedAt: mockDate,
@@ -91,8 +95,9 @@ describe('AuthService', () => {
       jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.validateUser('nonexistent@example.com', 'any-password'))
-        .rejects.toThrow(UnauthorizedException);
+      await expect(service.validateUser('nonexistent@example.com', 'any-password')).rejects.toThrow(
+        UnauthorizedException,
+      );
       expect(prismaService.user.findUnique).toHaveBeenCalledWith({
         where: { email: 'nonexistent@example.com' },
       });
@@ -105,8 +110,7 @@ describe('AuthService', () => {
       jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(oauthUser);
 
       // Act & Assert
-      await expect(service.validateUser(oauthUser.email, 'any-password'))
-        .rejects.toThrow(UnauthorizedException);
+      await expect(service.validateUser(oauthUser.email, 'any-password')).rejects.toThrow(UnauthorizedException);
       expect(prismaService.user.findUnique).toHaveBeenCalledWith({
         where: { email: oauthUser.email },
       });
@@ -119,8 +123,7 @@ describe('AuthService', () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       // Act & Assert
-      await expect(service.validateUser(mockUser.email, 'wrong-password'))
-        .rejects.toThrow(UnauthorizedException);
+      await expect(service.validateUser(mockUser.email, 'wrong-password')).rejects.toThrow(UnauthorizedException);
       expect(prismaService.user.findUnique).toHaveBeenCalledWith({
         where: { email: mockUser.email },
       });

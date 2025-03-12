@@ -1,5 +1,6 @@
 import { PrismaService } from '@/prisma/prisma.service';
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Plan, UserRole, WorkspaceRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -9,7 +10,7 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   async create(createUserDto: CreateUserDto) {
-    const { email, password, role, orgName, plan, ownerId } = createUserDto;
+    const { email, password, firstName, lastName, role, orgName, plan, ownerId } = createUserDto;
 
     // Check if user with email already exists
     const existingUser = await this.prisma.user.findUnique({
@@ -24,28 +25,76 @@ export class UsersService {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
-      const user = await this.prisma.user.create({
-        data: {
-          email,
-          password: hashedPassword,
-          role,
-          orgName,
-          plan,
-          ownerId,
-        },
-        select: {
-          id: true,
-          email: true,
-          role: true,
-          orgName: true,
-          plan: true,
-          ownerId: true,
-          createdAt: true,
-        },
-      });
+      // Start a transaction to create user and assign roles
+      return await this.prisma.$transaction(async (prisma) => {
+        // Create the user
+        const user = await prisma.user.create({
+          data: {
+            email,
+            password: hashedPassword,
+            firstName,
+            lastName,
+            role,
+            orgName,
+            plan: plan || Plan.STARTER, // Default plan
+            ownerId,
+          },
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            orgName: true,
+            plan: true,
+            ownerId: true,
+            createdAt: true,
+          },
+        });
 
-      return user;
+        // Assign default role based on user's role
+        let defaultRoleName = 'Member';
+        if (role === 'ADMIN') defaultRoleName = 'Admin';
+        if (role === 'OWNER') defaultRoleName = 'Owner';
+        if (role === 'SUPER') defaultRoleName = 'Super Admin';
+        if (role === 'SUPPORT') defaultRoleName = 'Support';
+
+        const defaultRole = await prisma.role.findUnique({
+          where: { name: defaultRoleName },
+        });
+
+        if (defaultRole) {
+          await prisma.userRoleAssignment.create({
+            data: {
+              userId: user.id,
+              roleId: defaultRole.id,
+            },
+          });
+        }
+
+        // Create default workspace if user is an owner
+        if (role === 'OWNER' && orgName) {
+          const workspace = await prisma.workspace.create({
+            data: {
+              name: `${orgName} Workspace`,
+              ownerId: user.id,
+            },
+          });
+
+          // Add user to workspace
+          await prisma.userWorkspace.create({
+            data: {
+              userId: user.id,
+              workspaceId: workspace.id,
+              role: WorkspaceRole.ADMIN,
+            },
+          });
+        }
+
+        return user;
+      });
     } catch (error) {
+      console.error('Error creating user:', error);
       throw new BadRequestException('Could not create user');
     }
   }
@@ -55,6 +104,8 @@ export class UsersService {
       select: {
         id: true,
         email: true,
+        firstName: true,
+        lastName: true,
         role: true,
         orgName: true,
         plan: true,
@@ -70,6 +121,8 @@ export class UsersService {
       select: {
         id: true,
         email: true,
+        firstName: true,
+        lastName: true,
         role: true,
         orgName: true,
         plan: true,
@@ -78,6 +131,11 @@ export class UsersService {
         userWorkspaces: {
           include: {
             workspace: true,
+          },
+        },
+        userRoleAssignments: {
+          include: {
+            role: true,
           },
         },
       },
@@ -117,6 +175,8 @@ export class UsersService {
         select: {
           id: true,
           email: true,
+          firstName: true,
+          lastName: true,
           role: true,
           orgName: true,
           plan: true,

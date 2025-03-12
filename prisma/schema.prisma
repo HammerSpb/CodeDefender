@@ -47,24 +47,171 @@ enum WorkspaceRole {
 }
 
 model User {
-  id             String          @id @default(uuid())
-  email          String          @unique
-  password       String?
-  provider       String?
-  providerId     String?
-  role           UserRole        @default(MEMBER)
-  orgName        String?         @map("org_name")
-  plan           Plan?
-  ownerId        String?         @map("owner_id")
-  workspaces     Workspace[]     @relation("WorkspaceOwner")
-  userWorkspaces UserWorkspace[]
-  auditLogs      AuditLog[]
-  createdAt      DateTime        @default(now()) @map("created_at")
-  updatedAt      DateTime        @updatedAt @map("updated_at")
+  id                String            @id @default(uuid())
+  email             String            @unique
+  password          String?
+  firstName         String?           @map("first_name")
+  lastName          String?           @map("last_name")
+  provider          String?
+  providerId        String?           @map("provider_id")
+  role              String           @default("MEMBER") @map("user_role")
+  orgName           String?           @map("org_name")
+  plan              Plan              @default(STARTER)
+  ownerId           String?           @map("owner_id")
+  
+  // MFA fields
+  mfaSecret         String?           @map("mfa_secret")
+  mfaEnabled        Boolean           @default(false) @map("mfa_enabled")
+  
+  // Authentication & Session
+  sessions          Session[]
+  trustedDevices    TrustedDevice[]
+  oauthProviders    OAuthProvider[]
+  
+  // Authorization & Resources
+  workspaces        Workspace[]       @relation("WorkspaceOwner")
+  userWorkspaces    UserWorkspace[]
+  userRoleAssignments UserRoleAssignment[]
+  
+  // Audit & Usage
+  usageLogs         UsageLog[]
+  auditLogs         AuditLog[]
+  
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
 
   @@map("users")
 }
 
+// Authorization Models
+model Permission {
+  id                String            @id @default(uuid())
+  code              String            @unique   // e.g., "SCAN:CREATE"
+  name              String
+  description       String?
+  scope             String            // "GLOBAL", "WORKSPACE", "SCAN", "REPORT"
+  action            String            // "CREATE", "READ", "UPDATE", "DELETE" 
+  resource          String            // "SCAN", "REPORT", "WORKSPACE", etc.
+  
+  rolePermissions   RolePermission[]
+  
+  createdAt         DateTime          @default(now()) @map("created_at")
+
+  @@map("permissions")
+}
+
+model Role {
+  id                String            @id @default(uuid())
+  name              String            @unique  // "Viewer", "Editor", "Admin"
+  description       String?
+  isDefault         Boolean           @default(false) @map("is_default")
+  
+  rolePermissions   RolePermission[]
+  userRoleAssignments UserRoleAssignment[]
+  
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+
+  @@map("roles")
+}
+
+model RolePermission {
+  roleId            String            @map("role_id")
+  permissionId      String            @map("permission_id")
+  
+  role              Role              @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission        Permission        @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRoleAssignment {
+  id                String            @id @default(uuid())
+  userId            String            @map("user_id")
+  roleId            String            @map("role_id")
+  workspaceId       String?           @map("workspace_id")
+  
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role              Role              @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  workspace         Workspace?        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  
+  createdAt         DateTime          @default(now()) @map("created_at")
+
+  @@unique([userId, roleId, workspaceId])
+  @@map("user_roles")
+}
+
+// Authentication & Session Models
+model Session {
+  id                String            @id @default(uuid())
+  userId            String            @map("user_id")
+  token             String            @unique // JWT ID
+  ipAddress         String?           @map("ip_address")
+  userAgent         String?           @map("user_agent")
+  deviceFingerprint String?           @map("device_fingerprint")
+  lastActive        DateTime          @default(now()) @map("last_active")
+  expiresAt         DateTime          @map("expires_at")
+  isRevoked         Boolean           @default(false) @map("is_revoked")
+  
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt         DateTime          @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([token])
+  @@map("sessions")
+}
+
+model TrustedDevice {
+  id                String            @id @default(uuid())
+  userId            String            @map("user_id")
+  fingerprint       String
+  name              String?
+  ipAddress         String?           @map("ip_address")
+  lastUsed          DateTime          @default(now()) @map("last_used")
+  
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt         DateTime          @default(now()) @map("created_at")
+
+  @@unique([userId, fingerprint])
+  @@index([fingerprint])
+  @@map("trusted_devices")
+}
+
+model OAuthProvider {
+  id                String            @id @default(uuid())
+  userId            String            @map("user_id")
+  provider          String            // "google", "github", etc.
+  providerId        String            @map("provider_id") // ID from the provider
+  
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt         DateTime          @default(now()) @map("created_at")
+
+  @@unique([provider, providerId])
+  @@unique([userId, provider])
+  @@map("oauth_providers")
+}
+
+// Usage & Auditing
+model UsageLog {
+  id                String            @id @default(uuid())
+  userId            String            @map("user_id")
+  resourceType      String            @map("resource_type") // "SCAN", "REPORT", etc.
+  action            String            // "CREATE", "READ", etc.
+  count             Int               @default(1)
+  
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt         DateTime          @default(now()) @map("created_at")
+
+  @@index([userId, resourceType, createdAt])
+  @@map("usage_logs")
+}
+
+// Existing Models
 model Workspace {
   id             String          @id @default(uuid())
   name           String
@@ -73,6 +220,7 @@ model Workspace {
   repositoryId   String?         @map("repository_id")
   repository     Repository?     @relation(fields: [repositoryId], references: [id])
   userWorkspaces UserWorkspace[]
+  userRoleAssignments UserRoleAssignment[]
   scans          Scan[]
   schedules      Schedule[]
   auditLogs      AuditLog[]

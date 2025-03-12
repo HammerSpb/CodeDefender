@@ -1,14 +1,17 @@
-// src/common/common.module.ts
-import { PrismaModule } from '@/prisma/prisma.module';
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { PermissionsModule } from '../permissions/permissions.module';
+import { PlansModule } from '../plans/plans.module';
+import { PrismaModule } from '../prisma/prisma.module';
+import { PolicyGuard } from './guards/policy.guard';
 import { RolesGuard } from './guards/roles.guard';
 
 @Module({
   imports: [
+    PermissionsModule,
+    PlansModule,
     PrismaModule,
-    ConfigModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -20,7 +23,15 @@ import { RolesGuard } from './guards/roles.guard';
       }),
     }),
   ],
-  providers: [RolesGuard],
-  exports: [RolesGuard, JwtModule],
+  providers: [
+    PolicyGuard,
+    RolesGuard,
+  ],
+  exports: [
+    PolicyGuard,
+    RolesGuard,
+    JwtModule,
+    PrismaModule,
+  ],
 })
 export class CommonModule {}

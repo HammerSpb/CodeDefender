@@ -1,0 +1,169 @@
+import { PERMISSION_CODES } from './permission-codes';
+
+export enum RoleType {
+  SUPER = 'Super Admin',
+  OWNER = 'Workspace Owner',
+  ADMIN = 'Workspace Admin',
+  MEMBER = 'Member',
+  SUPPORT = 'Support',
+  VIEWER = 'Viewer',
+}
+
+// Role descriptions for documentation and UI
+export const ROLE_DESCRIPTIONS = {
+  [RoleType.SUPER]: 'Full system access with all permissions',
+  [RoleType.OWNER]: 'Full control over their workspaces and resources',
+  [RoleType.ADMIN]: 'Administrative control within assigned workspaces',
+  [RoleType.MEMBER]: 'Regular user with standard permissions',
+  [RoleType.SUPPORT]: 'Technical support with limited administrative access',
+  [RoleType.VIEWER]: 'Read-only access to assigned resources',
+};
+
+// Define permissions for each role
+export const ROLE_PERMISSIONS = {
+  [RoleType.SUPER]: [
+    // Super admin has all permissions
+    ...Object.values(PERMISSION_CODES),
+  ],
+  
+  [RoleType.OWNER]: [
+    // Workspace management
+    PERMISSION_CODES.WORKSPACE_READ,
+    PERMISSION_CODES.WORKSPACE_UPDATE,
+    PERMISSION_CODES.WORKSPACE_DELETE,
+    PERMISSION_CODES.WORKSPACE_MANAGE,
+    
+    // User management within workspace
+    PERMISSION_CODES.USER_CREATE,
+    PERMISSION_CODES.USER_READ,
+    PERMISSION_CODES.USER_UPDATE,
+    PERMISSION_CODES.USER_DELETE,
+    PERMISSION_CODES.USER_MANAGE,
+    
+    // Role management
+    PERMISSION_CODES.ROLE_CREATE,
+    PERMISSION_CODES.ROLE_READ,
+    PERMISSION_CODES.ROLE_UPDATE,
+    PERMISSION_CODES.ROLE_DELETE,
+    
+    // Permission management
+    PERMISSION_CODES.PERMISSION_READ,
+    PERMISSION_CODES.PERMISSION_MANAGE,
+    
+    // Full access to workspace resources
+    PERMISSION_CODES.SCAN_CREATE,
+    PERMISSION_CODES.SCAN_READ,
+    PERMISSION_CODES.SCAN_UPDATE,
+    PERMISSION_CODES.SCAN_DELETE,
+    PERMISSION_CODES.SCAN_EXECUTE,
+    
+    PERMISSION_CODES.REPORT_CREATE,
+    PERMISSION_CODES.REPORT_READ,
+    PERMISSION_CODES.REPORT_UPDATE,
+    PERMISSION_CODES.REPORT_DELETE,
+    
+    PERMISSION_CODES.REPOSITORY_CREATE,
+    PERMISSION_CODES.REPOSITORY_READ,
+    PERMISSION_CODES.REPOSITORY_UPDATE,
+    PERMISSION_CODES.REPOSITORY_DELETE,
+    
+    PERMISSION_CODES.SCHEDULE_CREATE,
+    PERMISSION_CODES.SCHEDULE_READ,
+    PERMISSION_CODES.SCHEDULE_UPDATE,
+    PERMISSION_CODES.SCHEDULE_DELETE,
+    
+    // Workspace settings management
+    PERMISSION_CODES.SETTINGS_READ,
+    PERMISSION_CODES.SETTINGS_UPDATE,
+  ],
+  
+  [RoleType.ADMIN]: [
+    // Workspace access
+    PERMISSION_CODES.WORKSPACE_READ,
+    PERMISSION_CODES.WORKSPACE_UPDATE,
+    
+    // User management within workspace
+    PERMISSION_CODES.USER_CREATE,
+    PERMISSION_CODES.USER_READ,
+    PERMISSION_CODES.USER_UPDATE,
+    
+    // Role viewing
+    PERMISSION_CODES.ROLE_READ,
+    
+    // Permission viewing
+    PERMISSION_CODES.PERMISSION_READ,
+    
+    // Resource management
+    PERMISSION_CODES.SCAN_CREATE,
+    PERMISSION_CODES.SCAN_READ,
+    PERMISSION_CODES.SCAN_UPDATE,
+    PERMISSION_CODES.SCAN_DELETE,
+    PERMISSION_CODES.SCAN_EXECUTE,
+    
+    PERMISSION_CODES.REPORT_CREATE,
+    PERMISSION_CODES.REPORT_READ,
+    PERMISSION_CODES.REPORT_UPDATE,
+    PERMISSION_CODES.REPORT_DELETE,
+    
+    PERMISSION_CODES.REPOSITORY_CREATE,
+    PERMISSION_CODES.REPOSITORY_READ,
+    PERMISSION_CODES.REPOSITORY_UPDATE,
+    
+    PERMISSION_CODES.SCHEDULE_CREATE,
+    PERMISSION_CODES.SCHEDULE_READ,
+    PERMISSION_CODES.SCHEDULE_UPDATE,
+    PERMISSION_CODES.SCHEDULE_DELETE,
+    
+    // Settings access
+    PERMISSION_CODES.SETTINGS_READ,
+  ],
+  
+  [RoleType.MEMBER]: [
+    // Basic workspace access
+    PERMISSION_CODES.WORKSPACE_READ,
+    
+    // Basic user access
+    PERMISSION_CODES.USER_READ,
+    
+    // Resource usage
+    PERMISSION_CODES.SCAN_CREATE,
+    PERMISSION_CODES.SCAN_READ,
+    PERMISSION_CODES.SCAN_EXECUTE,
+    
+    PERMISSION_CODES.REPORT_CREATE,
+    PERMISSION_CODES.REPORT_READ,
+    
+    PERMISSION_CODES.REPOSITORY_READ,
+    
+    PERMISSION_CODES.SCHEDULE_READ,
+  ],
+  
+  [RoleType.SUPPORT]: [
+    // Support-specific permissions
+    PERMISSION_CODES.WORKSPACE_READ,
+    PERMISSION_CODES.USER_READ,
+    PERMISSION_CODES.SCAN_READ,
+    PERMISSION_CODES.REPORT_READ,
+    PERMISSION_CODES.REPOSITORY_READ,
+    PERMISSION_CODES.SCHEDULE_READ,
+    PERMISSION_CODES.SETTINGS_READ,
+  ],
+  
+  [RoleType.VIEWER]: [
+    // Read-only permissions
+    PERMISSION_CODES.WORKSPACE_READ,
+    PERMISSION_CODES.USER_READ,
+    PERMISSION_CODES.SCAN_READ,
+    PERMISSION_CODES.REPORT_READ,
+    PERMISSION_CODES.REPOSITORY_READ,
+    PERMISSION_CODES.SCHEDULE_READ,
+  ],
+};
+
+// Define default roles for each plan
+export const DEFAULT_ROLES = {
+  STARTER: [RoleType.OWNER, RoleType.MEMBER, RoleType.VIEWER],
+  PRO: [RoleType.OWNER, RoleType.ADMIN, RoleType.MEMBER, RoleType.VIEWER],
+  BUSINESS: [RoleType.OWNER, RoleType.ADMIN, RoleType.MEMBER, RoleType.VIEWER],
+  ENTERPRISE: [RoleType.OWNER, RoleType.ADMIN, RoleType.MEMBER, RoleType.SUPPORT, RoleType.VIEWER],
+};

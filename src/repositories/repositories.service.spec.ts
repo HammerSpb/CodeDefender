@@ -1,11 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { PrismaService } from '../prisma/prisma.service';
-import { AuditLogsService } from '../audit-logs/audit-logs.service';
-import { RepositoriesService } from './repositories.service';
-import { CreateRepositoryDto } from './dto/create-repository.dto';
-import { UpdateRepositoryDto } from './dto/update-repository.dto';
-import { RepositoryProvider, UserRole, WorkspaceRole } from '@prisma/client';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import {  ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Plan,  Test, TestingModule } from '@nestjs/testing';
+import { Plan,  RepositoryProvider, UserRole, WorkspaceRole } from '@prisma/client';
+import { Plan,  AuditLogsService } from '../audit-logs/audit-logs.service';
+import { Plan,  PrismaService } from '../prisma/prisma.service';
+import { Plan,  CreateRepositoryDto } from './dto/create-repository.dto';
+import { Plan,  UpdateRepositoryDto } from './dto/update-repository.dto';
+import { Plan,  RepositoriesService } from './repositories.service';
 
 describe('RepositoriesService', () => {
   let service: RepositoriesService;
@@ -16,13 +16,17 @@ describe('RepositoriesService', () => {
   const mockDate = new Date();
   const mockUser = {
     id: 'user-id',
+    firstName: '',
+    lastName: '',
     email: 'test@example.com',
     password: 'hashed-password',
     role: UserRole.OWNER,
+    mfaSecret: null,
+    mfaEnabled: false,
     provider: null,
     providerId: null,
     orgName: null,
-    plan: null,
+    plan: Plan.PRO, firstName: null, lastName: null, mfaSecret: null, mfaEnabled: false,
     ownerId: null,
     createdAt: mockDate,
     updatedAt: mockDate,
@@ -32,12 +36,16 @@ describe('RepositoriesService', () => {
     ...mockUser,
     id: 'super-id',
     role: UserRole.SUPER,
+    mfaSecret: null,
+    mfaEnabled: false,
   };
 
   const mockMemberUser = {
     ...mockUser,
     id: 'member-id',
     role: UserRole.MEMBER,
+    mfaSecret: null,
+    mfaEnabled: false,
   };
 
   const mockRepository = {
@@ -205,10 +213,26 @@ describe('RepositoriesService', () => {
     it('should return repositories from workspaces for regular users', async () => {
       // Arrange
       const mockUserWorkspaces = [
-        { workspace: { repositoryId: 'repo-1' }, id: 'uw-1', role: WorkspaceRole.MEMBER, createdAt: mockDate, updatedAt: mockDate, userId: 'user-id', workspaceId: 'workspace-1' },
-        { workspace: { repositoryId: 'repo-2' }, id: 'uw-2', role: WorkspaceRole.MEMBER, createdAt: mockDate, updatedAt: mockDate, userId: 'user-id', workspaceId: 'workspace-2' },
+        {
+          workspace: { repositoryId: 'repo-1' },
+          id: 'uw-1',
+          role: WorkspaceRole.MEMBER,
+          createdAt: mockDate,
+          updatedAt: mockDate,
+          userId: 'user-id',
+          workspaceId: 'workspace-1',
+        },
+        {
+          workspace: { repositoryId: 'repo-2' },
+          id: 'uw-2',
+          role: WorkspaceRole.MEMBER,
+          createdAt: mockDate,
+          updatedAt: mockDate,
+          userId: 'user-id',
+          workspaceId: 'workspace-2',
+        },
       ];
-      
+
       jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(mockMemberUser);
       jest.spyOn(prismaService.userWorkspace, 'findMany').mockResolvedValue(mockUserWorkspaces);
       jest.spyOn(prismaService.repository, 'findMany').mockResolvedValue(mockRepositories);

@@ -1,13 +1,13 @@
-import { AuditLogsService } from '@/audit-logs/audit-logs.service';
-import { PrismaService } from '@/prisma/prisma.service';
-import { ScansService } from '@/scans/scans.service';
-import { Test, TestingModule } from '@nestjs/testing';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { getQueueToken } from '@nestjs/bull';
-import { UserRole, WorkspaceRole } from '@prisma/client';
-import { CreateScheduleDto } from './dto/create-schedule.dto';
-import { UpdateScheduleDto } from './dto/update-schedule.dto';
-import { SchedulesService } from './schedules.service';
+import {  AuditLogsService } from '@/audit-logs/audit-logs.service';
+import { Plan,  PrismaService } from '@/prisma/prisma.service';
+import { Plan,  ScansService } from '@/scans/scans.service';
+import { Plan,  Test, TestingModule } from '@nestjs/testing';
+import { Plan,  ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Plan,  getQueueToken } from '@nestjs/bull';
+import { Plan,  UserRole, WorkspaceRole } from '@prisma/client';
+import { Plan,  CreateScheduleDto } from './dto/create-schedule.dto';
+import { Plan,  UpdateScheduleDto } from './dto/update-schedule.dto';
+import { Plan,  SchedulesService } from './schedules.service';
 
 describe('SchedulesService', () => {
   let service: SchedulesService;
@@ -23,10 +23,12 @@ describe('SchedulesService', () => {
     email: 'test@example.com',
     password: 'hashed-password',
     role: UserRole.OWNER,
+    mfaSecret: null,
+    mfaEnabled: false,
     provider: null,
     providerId: null,
     orgName: null,
-    plan: null,
+    plan: Plan.PRO, firstName: null, lastName: null, mfaSecret: null, mfaEnabled: false,
     ownerId: null,
     createdAt: mockDate,
     updatedAt: mockDate,
@@ -36,6 +38,8 @@ describe('SchedulesService', () => {
     ...mockUser,
     id: 'admin-id',
     role: UserRole.ADMIN,
+    mfaSecret: null,
+    mfaEnabled: false,
   };
 
   const mockWorkspace = {
@@ -230,7 +234,7 @@ describe('SchedulesService', () => {
 
     it('should create a schedule successfully as super admin', async () => {
       // Arrange
-      const superAdmin = { ...mockUser, id: 'super-id', role: UserRole.SUPER };
+      const superAdmin = { ...mockUser, id: 'super-id',
       const workspaceWithDifferentOwner = { ...mockWorkspace, ownerId: 'other-owner-id', userWorkspaces: [] };
       
       jest.spyOn(prismaService.workspace, 'findUnique').mockResolvedValue(workspaceWithDifferentOwner);
@@ -257,7 +261,7 @@ describe('SchedulesService', () => {
 
     it('should throw ForbiddenException if user is not owner or admin', async () => {
       // Arrange
-      const regularUser = { ...mockUser, id: 'regular-user-id', role: UserRole.MEMBER };
+      const regularUser = { ...mockUser, id: 'regular-user-id',
       const workspaceWithDifferentOwner = { ...mockWorkspace, ownerId: 'other-owner-id', userWorkspaces: [] };
       
       jest.spyOn(prismaService.workspace, 'findUnique').mockResolvedValue(workspaceWithDifferentOwner);
@@ -326,7 +330,7 @@ describe('SchedulesService', () => {
 
     it('should throw ForbiddenException if user does not have access to workspace', async () => {
       // Arrange
-      const regularUser = { ...mockUser, id: 'regular-user-id', role: UserRole.MEMBER };
+      const regularUser = { ...mockUser, id: 'regular-user-id',
       const workspaceWithDifferentOwner = { ...mockWorkspace, ownerId: 'other-owner-id', userWorkspaces: [] };
       
       jest.spyOn(prismaService.workspace, 'findUnique').mockResolvedValue(workspaceWithDifferentOwner);
@@ -375,7 +379,7 @@ describe('SchedulesService', () => {
 
     it('should throw ForbiddenException if user does not have access to workspace', async () => {
       // Arrange
-      const regularUser = { ...mockUser, id: 'regular-user-id', role: UserRole.MEMBER };
+      const regularUser = { ...mockUser, id: 'regular-user-id',
       const scheduleWithDifferentOwner = {
         ...mockScheduleWithWorkspace,
         workspace: {
@@ -496,7 +500,7 @@ describe('SchedulesService', () => {
 
     it('should throw ForbiddenException if user is not owner or admin', async () => {
       // Arrange
-      const regularUser = { ...mockUser, id: 'regular-user-id', role: UserRole.MEMBER };
+      const regularUser = { ...mockUser, id: 'regular-user-id',
       const scheduleWithDifferentOwner = {
         ...mockScheduleWithWorkspace,
         workspace: {
@@ -586,7 +590,7 @@ describe('SchedulesService', () => {
 
     it('should throw ForbiddenException if user is not owner or admin', async () => {
       // Arrange
-      const regularUser = { ...mockUser, id: 'regular-user-id', role: UserRole.MEMBER };
+      const regularUser = { ...mockUser, id: 'regular-user-id',
       const scheduleWithDifferentOwner = {
         ...mockScheduleWithWorkspace,
         workspace: {
@@ -610,7 +614,7 @@ describe('SchedulesService', () => {
 
     it('should trigger a scan based on schedule', async () => {
       // Arrange
-      const mockScan = { id: 'scan-id', status: 'PENDING' };
+      const mockScan = { id: 'scan-id',
       jest.spyOn(prismaService.schedule, 'findUnique').mockResolvedValue(mockSchedule);
       jest.spyOn(scansService, 'create').mockResolvedValue(mockScan as any);
 

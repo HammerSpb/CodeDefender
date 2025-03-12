@@ -3,7 +3,7 @@ import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Plan, UserRole, WorkspaceRole } from '@prisma/client';
+import { UserRole, WorkspaceRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 
@@ -16,11 +16,15 @@ describe('UsersController', () => {
   const mockUser = {
     id: 'user-id',
     email: 'test@example.com',
-    role: UserRole.MEMBER,
+    firstName: 'Test',
+    lastName: 'User',
+    role: 'MEMBER',
     orgName: 'Test Org',
-    plan: Plan.PRO, // Changed from BASIC to PRO since it doesn't exist
+    plan: Plan.PRO, firstName: null, lastName: null, mfaSecret: null, mfaEnabled: false,
     ownerId: 'owner-id',
     createdAt: mockDate,
+    mfaSecret: null,
+    mfaEnabled: false
   };
 
   const mockUserWithWorkspaces = {
@@ -43,6 +47,22 @@ describe('UsersController', () => {
         },
       },
     ],
+    userRoleAssignments: [{
+      id: 'user-role-id',
+      userId: mockUser.id,
+      roleId: 'role-id',
+      
+      
+      createdAt: mockDate,
+      role: {
+        id: 'role-id',
+        name: 'Member',
+        description: 'Regular user',
+        isDefault: true,
+        createdAt: mockDate,
+        updatedAt: mockDate
+      }
+    }]
   };
 
   beforeEach(async () => {
@@ -83,9 +103,13 @@ describe('UsersController', () => {
     const createDto: CreateUserDto = {
       email: 'new@example.com',
       password: 'password123',
+      firstName: 'New',
+      lastName: 'User',
       role: UserRole.MEMBER,
+    mfaSecret: null,
+    mfaEnabled: false,
       orgName: 'New Org',
-      plan: Plan.PRO,
+      plan: Plan.PRO, firstName: null, lastName: null, mfaSecret: null, mfaEnabled: false,
       ownerId: 'owner-id',
     };
 
@@ -138,6 +162,8 @@ describe('UsersController', () => {
     const updateDto: UpdateUserDto = {
       email: 'updated@example.com',
       role: UserRole.ADMIN,
+    mfaSecret: null,
+    mfaEnabled: false,
     };
 
     it('should update a user', async () => {
@@ -145,7 +171,7 @@ describe('UsersController', () => {
       const updatedUser = {
         ...mockUser,
         email: 'updated@example.com', // Using concrete string instead of updateDto.email
-        role: UserRole.ADMIN, // Using concrete enum value instead of updateDto.role
+        role: 'ADMIN', // Using concrete string value
         updatedAt: new Date(),
       };
       jest.spyOn(service, 'update').mockResolvedValue(updatedUser);
