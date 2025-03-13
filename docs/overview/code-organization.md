@@ -11,6 +11,7 @@ src/
 ├── auth/             # Authentication and session management
 ├── billing/          # Plan management and billing integration
 ├── common/           # Shared utilities and helpers
+│   └── utils/        # Common utility functions
 ├── permissions/      # Permission and authorization system
 ├── plans/            # Subscription plans and feature flags
 ├── prisma/           # Prisma service and database connectivity
@@ -26,20 +27,41 @@ src/
 
 ## Module Structure
 
-Each feature module typically includes:
+Each feature module follows a consistent structure:
 
 ```
 feature/
 ├── constants/        # Constants and enums
+│   └── feature-constants.ts
 ├── decorators/       # Custom decorators
+│   └── feature.decorator.ts
 ├── dto/              # Data transfer objects
-├── entities/         # Entity definitions
-├── guards/           # Authorization guards
+│   ├── create-feature.dto.ts
+│   ├── update-feature.dto.ts
+│   └── index.ts     # Re-export all DTOs
 ├── interfaces/       # TypeScript interfaces
-├── feature.controller.ts       # HTTP controllers
-├── feature.module.ts           # Module definition
-├── feature.service.ts          # Business logic
-└── feature.service.spec.ts     # Unit tests
+│   ├── feature.interface.ts
+│   └── index.ts     # Re-export all interfaces
+├── guards/           # Authorization guards
+│   └── feature.guard.ts
+├── tests/            # Unit and integration tests
+│   ├── feature.controller.spec.ts
+│   └── feature.service.spec.ts
+├── feature.controller.ts  # HTTP controllers
+├── feature.module.ts      # Module definition
+└── feature.service.ts     # Business logic
+```
+
+## Common Utilities
+
+The `common/utils` directory contains shared utility functions:
+
+```
+common/utils/
+├── request.utils.ts   # HTTP request helpers
+├── user.utils.ts      # User-related functions
+├── guard.utils.ts     # Authorization helper functions
+└── index.ts           # Barrel export file
 ```
 
 ## Key Modules
@@ -179,7 +201,7 @@ export class ScansService {
 
 ### Guard Pattern
 
-Guards enforce authentication and authorization.
+Guards enforce authentication and authorization using shared utilities.
 
 ```typescript
 @Injectable()
@@ -187,10 +209,17 @@ export class PermissionGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private permissionsService: PermissionsService,
+    private prisma: PrismaService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // Authorization logic
+    const { userId, workspaceId, isSuper } = await extractGuardContext(
+      context, 
+      this.prisma,
+      { allowSuper: true }
+    );
+    
+    // Authorization logic using shared utilities
   }
 }
 ```
@@ -208,11 +237,29 @@ export const RequiresPermission = (
 };
 ```
 
+### Shared Utilities Pattern
+
+Utilities extract common functionality:
+
+```typescript
+// Using request utilities
+const userId = extractUserId(request);
+const workspaceId = extractResourceId(request, 'workspaceId');
+
+// Using user utilities
+const userRole = await getUserRole(prisma, userId);
+const isInWorkspace = await isUserInWorkspace(prisma, userId, workspaceId);
+
+// Using guard utilities
+const guardContext = await extractGuardContext(context, prisma, options);
+handleGuardResult(hasPermission, 'Permission denied', options);
+```
+
 ## Style Guidelines
 
 - **Single Responsibility**: Each class has a single responsibility
 - **Descriptive Naming**: Clear, consistent naming conventions
-- **DRY Principle**: Avoid duplication through abstraction
+- **DRY Principle**: Avoid duplication through shared utilities
 - **SOLID Principles**: Follow OOP best practices
 - **Consistent Formatting**: Use Prettier for consistent style
 - **Error Handling**: Consistent error handling patterns

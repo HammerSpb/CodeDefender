@@ -50,6 +50,7 @@ graph TD
     A --> H[Permissions Module]
     A --> I[Plans Module]
     A --> J[Audit Logs Module]
+    A --> K[Common Module]
     
     B -.-> H
     C -.-> H
@@ -58,5 +59,10 @@ graph TD
     F -.-> H
     G -.-> H
     
+    H -.-> K
+    B -.-> K
+    E -.-> K
+    
     E -.-> I
     D -.-> I
+    I -.-> K

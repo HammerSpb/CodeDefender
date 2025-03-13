@@ -14,6 +14,7 @@ Welcome to the comprehensive documentation for the CodeDefender security scannin
 - [Authentication System](overview/authentication.md)
 - [Authorization System](overview/authorization.md)
 - [Testing Strategy](overview/testing-strategy.md)
+- [Common Utilities](overview/common-utilities.md)
 
 ### Developer Guides
 - [Coding Standards](developing/coding-standards.md)

@@ -3,7 +3,6 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
-  UnauthorizedException,
   Logger,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -17,6 +16,12 @@ import {
   LimitOptions,
 } from '../decorators/requires-feature.decorator';
 import { Feature, PLAN_UPGRADE_MESSAGES, LimitType } from '../constants/plan-features';
+import { 
+  extractGuardContext, 
+  getOptions,
+  handleGuardResult 
+} from '../../common/utils/guard.utils';
+import { extractResourceId } from '../../common/utils/request.utils';
 
 @Injectable()
 export class FeatureGuard implements CanActivate {
@@ -43,23 +48,31 @@ export class FeatureGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
-    const userId = request.user?.id;
-
-    if (!userId) {
-      throw new UnauthorizedException('User not authenticated');
-    }
-
-    // Check if user is SUPER user
-    const userRole = await this.getUserRole(userId);
-    const isSuper = userRole === 'SUPER';
+    // Extract context data
+    const { 
+      userId, 
+      workspaceId, 
+      isSuper 
+    } = await extractGuardContext(
+      context, 
+      this.plansService['prisma'],
+      {
+        allowSuper: true
+      }
+    );
 
     // Handle feature check if required
     if (requiredFeatures && requiredFeatures.length > 0) {
-      const options = this.reflector.getAllAndOverride<FeatureOptions>(
+      const options = getOptions<FeatureOptions>(
+        this.reflector,
+        context,
         FEATURE_OPTIONS_KEY,
-        [context.getHandler(), context.getClass()],
-      ) || {};
+        {
+          requireAll: true,
+          showUpgradePrompt: true,
+          allowSuper: true
+        }
+      );
 
       // Skip check for SUPER users if allowed
       if (isSuper && options.allowSuper) {
@@ -99,10 +112,15 @@ export class FeatureGuard implements CanActivate {
 
     // Handle limit check if required
     if (limitCheck) {
-      const options = this.reflector.getAllAndOverride<LimitOptions>(
+      const options = getOptions<LimitOptions>(
+        this.reflector,
+        context,
         LIMIT_OPTIONS_KEY,
-        [context.getHandler(), context.getClass()],
-      ) || {};
+        {
+          showUpgradePrompt: true,
+          allowSuper: true
+        }
+      );
 
       // Skip check for SUPER users if allowed
       if (isSuper && options.allowSuper) {
@@ -111,15 +129,16 @@ export class FeatureGuard implements CanActivate {
 
       try {
         // Get workspace ID if specified in options
-        let workspaceId: string | undefined = undefined;
+        let limitWorkspaceId = workspaceId;
         
-        if (options.workspaceIdParam) {
-          workspaceId = this.extractParamFromRequest(request, options.workspaceIdParam);
+        if (options.workspaceIdParam && !limitWorkspaceId) {
+          const request = context.switchToHttp().getRequest();
+          limitWorkspaceId = extractResourceId(request, options.workspaceIdParam);
         }
 
         // Check if user is within their limit
         const { allowed, current, limit, percentage } = 
-          await this.plansService.checkUsageLimit(userId, limitCheck, workspaceId);
+          await this.plansService.checkUsageLimit(userId, limitCheck, limitWorkspaceId);
 
         if (!allowed) {
           // Generate appropriate error message
@@ -148,42 +167,5 @@ export class FeatureGuard implements CanActivate {
 
     // If we made it this far, the user has access
     return true;
-  }
-
-  /**
-   * Get user role directly from database
-   */
-  private async getUserRole(userId: string): Promise<string | null> {
-    try {
-      const user = await this.plansService['prisma'].user.findUnique({
-        where: { id: userId },
-        select: { role: true },
-      });
-      return user?.role || null;
-    } catch (error) {
-      return null;
-    }
-  }
-
-  /**
-   * Extract parameter from request (params, query, or body)
-   */
-  private extractParamFromRequest(request: any, paramName: string): string | undefined {
-    // Try to get from route params
-    if (request.params && request.params[paramName]) {
-      return request.params[paramName];
-    }
-    
-    // Try to get from query params
-    if (request.query && request.query[paramName]) {
-      return request.query[paramName];
-    }
-    
-    // Try to get from body
-    if (request.body && request.body[paramName]) {
-      return request.body[paramName];
-    }
-    
-    return undefined;
   }
 }
