@@ -13,6 +13,8 @@ import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottleLoginGuard } from './guards/throttle-login.guard';
 import { AuthExceptionFilter } from './filters/auth-exceptions.filter';
 import { GithubStrategy } from './strategies/github.strategy';
+import { PasswordlessController } from './passwordless/passwordless.controller';
+import { PasswordlessService } from './passwordless/passwordless.service';
 
 @Module({
   imports: [
@@ -35,12 +37,13 @@ import { GithubStrategy } from './strategies/github.strategy';
       limit: 5, // 5 requests per minute for login/register
     }]),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, PasswordlessController],
   providers: [
     AuthService, 
     TokensService, 
     JwtStrategy,
     GithubStrategy,
+    PasswordlessService,
     {
       provide: APP_GUARD,
       useClass: ThrottleLoginGuard,

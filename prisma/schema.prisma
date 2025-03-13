@@ -67,6 +67,7 @@ model User {
   sessions          Session[]
   trustedDevices    TrustedDevice[]
   oauthProviders    OAuthProvider[]
+  passwordlessTokens PasswordlessToken[]
   
   // Authorization & Resources
   workspaces        Workspace[]       @relation("WorkspaceOwner")
@@ -161,6 +162,23 @@ model Session {
   @@index([userId])
   @@index([token])
   @@map("sessions")
+}
+
+model PasswordlessToken {
+  id                String            @id @default(uuid())
+  userId            String            @map("user_id")
+  token             String            @unique
+  ipAddress         String?           @map("ip_address")
+  expiresAt         DateTime          @map("expires_at")
+  isUsed            Boolean           @default(false) @map("is_used")
+  
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt         DateTime          @default(now()) @map("created_at")
+
+  @@index([token])
+  @@index([userId])
+  @@map("passwordless_tokens")
 }
 
 model TrustedDevice {
