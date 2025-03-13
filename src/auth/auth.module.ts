@@ -3,11 +3,15 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { AuditLogsModule } from '@/audit-logs/audit-logs.module';
 import { TokensService } from './tokens.service';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { ThrottleLoginGuard } from './guards/throttle-login.guard';
+import { AuthExceptionFilter } from './filters/auth-exceptions.filter';
 
 @Module({
   imports: [
@@ -24,9 +28,26 @@ import { TokensService } from './tokens.service';
         },
       }),
     }),
+    ThrottlerModule.forRoot([{
+      name: 'auth',
+      ttl: 60000, // 1 minute
+      limit: 5, // 5 requests per minute for login/register
+    }]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, TokensService, JwtStrategy],
+  providers: [
+    AuthService, 
+    TokensService, 
+    JwtStrategy,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottleLoginGuard,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: AuthExceptionFilter,
+    },
+  ],
   exports: [AuthService, TokensService, JwtStrategy, PassportModule, JwtModule],
 })
 export class AuthModule {}

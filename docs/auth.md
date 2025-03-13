@@ -30,11 +30,15 @@ CodeDefender uses a modern JWT-based authentication system with refresh tokens f
 
 ## Security Measures
 
+- Strong password validation for registration (requires uppercase, lowercase, numbers, special chars)
+- Rate limiting for login/register endpoints (5 attempts per minute per IP)
+- Enhanced error handling with standardized responses
 - Refresh tokens are stored in the database with additional metadata
 - Sessions track IP address, user agent, and device fingerprint
 - Tokens have short expiration times to limit the impact of token theft
 - Server-side token revocation allows immediate termination of sessions
 - Audit logging tracks all authentication activities
+- Brute force protection via rate limiting
 
 ## Configuration
 

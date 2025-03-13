@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Post,
   Req,
+  UseFilters,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -20,11 +21,13 @@ import { LoginDto } from './dto/login.dto';
 import { LogoutDto } from './dto/logout.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
+import { AuthExceptionFilter } from './filters/auth-exceptions.filter';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Request } from 'express';
 
 @ApiTags('auth')
 @Controller('auth')
+@UseFilters(AuthExceptionFilter)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -33,6 +36,7 @@ export class AuthController {
   @ApiOperation({ summary: 'User login' })
   @ApiResponse({ status: 200, description: 'Login successful' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
   async login(@Body() loginDto: LoginDto, @Req() req: Request) {
     return this.authService.login(loginDto, req);
   }
@@ -42,6 +46,7 @@ export class AuthController {
   @ApiOperation({ summary: 'User registration' })
   @ApiResponse({ status: 201, description: 'Registration successful' })
   @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
   async register(@Body() registerDto: RegisterDto, @Req() req: Request) {
     return this.authService.register(registerDto, req);
   }
