@@ -12,13 +12,14 @@ CodeDefender is a security scanning and management platform for code repositorie
 - **Security Scanning**: Scan repositories for secrets, vulnerabilities, and non-code files
 - **Scheduled Scans**: Set up recurring scans with customizable schedules
 - **Audit Logging**: Track all actions for compliance and debugging
+- **Modern Authentication**: JWT-based authentication with refresh tokens and session management
 
 ## Tech Stack
 
 - **Backend**: NestJS with TypeScript
 - **Database**: PostgreSQL with Prisma ORM
 - **Queuing**: Bull with Redis for asynchronous processing
-- **Authentication**: JWT-based authentication
+- **Authentication**: JWT-based authentication with refresh tokens
 - **Testing**: Vitest for unit and integration testing
 - **API Documentation**: Swagger
 - **Containerization**: Docker and Docker Compose
@@ -96,6 +97,16 @@ After seeding, the following users are available:
 ## API Documentation
 
 The API documentation is available at `/api/docs` when the server is running. It provides details about all available endpoints, request/response schemas, and authentication requirements.
+
+## Authentication
+
+CodeDefender uses a modern JWT-based authentication system:
+
+- **Access Token**: Short-lived token for API authorization
+- **Refresh Token**: Long-lived token for obtaining new access tokens
+- **Session Management**: Track and control active sessions across devices
+
+For detailed information, see [Authentication Documentation](docs/auth.md).
 
 ## Development
 

@@ -6,11 +6,14 @@ import { LoginDto } from './dto/login.dto';
 import { Plan, WorkspaceRole } from '@prisma/client';
 import { AuditLogsService } from '@/audit-logs/audit-logs.service';
 import { RegisterDto } from './dto/register.dto';
+import { TokensService } from './tokens.service';
+import { Request } from 'express';
 
 @Injectable()
 export class AuthService {
   constructor(
     private jwtService: JwtService,
+    private tokensService: TokensService,
     private prismaService: PrismaService,
     private auditLogsService: AuditLogsService,
   ) {}
@@ -33,7 +36,7 @@ export class AuthService {
     return user;
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto, req?: Request) {
     const user = await this.validateUser(loginDto.email, loginDto.password);
 
     const payload = {
@@ -43,6 +46,15 @@ export class AuthService {
       ownerId: user.ownerId,
       plan: user.plan,
     };
+
+    // Generate tokens
+    const accessToken = this.tokensService.generateAccessToken(payload);
+    const refreshToken = await this.tokensService.generateRefreshToken(
+      user.id,
+      req?.ip,
+      req?.headers['user-agent'],
+      req?.headers['x-device-fingerprint'] as string,
+    );
 
     // Log the login action
     await this.auditLogsService.create({
@@ -55,7 +67,8 @@ export class AuthService {
     });
 
     return {
-      accessToken: this.jwtService.sign(payload),
+      accessToken,
+      refreshToken,
       user: {
         id: user.id,
         email: user.email,
@@ -69,9 +82,100 @@ export class AuthService {
   }
 
   /**
+   * Refresh tokens
+   */
+  async refreshTokens(refreshToken: string, req?: Request) {
+    const { user, sessionId } = await this.tokensService.validateRefreshToken(refreshToken);
+
+    // Create payload for new access token
+    const payload = {
+      email: user.email,
+      sub: user.id,
+      role: user.role,
+      ownerId: user.ownerId,
+      plan: user.plan,
+    };
+
+    // Generate new access token
+    const accessToken = this.tokensService.generateAccessToken(payload);
+
+    // Track token refresh in audit logs
+    await this.auditLogsService.create({
+      userId: user.id,
+      action: 'TOKEN_REFRESH',
+      details: {
+        sessionId,
+        timestamp: new Date().toISOString(),
+        ipAddress: req?.ip,
+        userAgent: req?.headers['user-agent'],
+      },
+    });
+
+    return {
+      accessToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        orgName: user.orgName,
+        plan: user.plan,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
+    };
+  }
+
+  /**
+   * Logout (revoke refresh token)
+   */
+  async logout(refreshToken: string, userId: string) {
+    const revoked = await this.tokensService.revokeRefreshToken(refreshToken);
+
+    if (revoked) {
+      // Log the logout action
+      await this.auditLogsService.create({
+        userId,
+        action: 'USER_LOGOUT',
+        details: {
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
+
+    return { success: revoked };
+  }
+
+  /**
+   * Logout from all devices (revoke all refresh tokens)
+   */
+  async logoutFromAllDevices(userId: string) {
+    const revoked = await this.tokensService.revokeAllUserRefreshTokens(userId);
+
+    if (revoked) {
+      // Log the action
+      await this.auditLogsService.create({
+        userId,
+        action: 'USER_LOGOUT_ALL',
+        details: {
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
+
+    return { success: revoked };
+  }
+
+  /**
+   * Get all active sessions for a user
+   */
+  async getUserSessions(userId: string) {
+    return this.tokensService.getUserSessions(userId);
+  }
+
+  /**
    * Register a new user
    */
-  async register(registerDto: RegisterDto) {
+  async register(registerDto: RegisterDto, req?: Request) {
     const { email, password, firstName, lastName, orgName } = registerDto;
 
     // Check if user with email already exists
@@ -160,16 +264,24 @@ export class AuthService {
           },
         });
 
-        // Generate JWT token
+        // Generate tokens
         const payload = {
           email: user.email,
           sub: user.id,
           role: user.role,
           plan: user.plan,
         };
+        const accessToken = this.tokensService.generateAccessToken(payload);
+        const refreshToken = await this.tokensService.generateRefreshToken(
+          user.id,
+          req?.ip,
+          req?.headers['user-agent'],
+          req?.headers['x-device-fingerprint'] as string,
+        );
 
         return {
-          accessToken: this.jwtService.sign(payload),
+          accessToken,
+          refreshToken,
           user,
           workspace,
         };
