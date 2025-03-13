@@ -28,6 +28,11 @@ CodeDefender uses a modern JWT-based authentication system with refresh tokens f
 
 - `GET /api/v1/auth/sessions` - List all active sessions
 
+### OAuth Authentication
+
+- `GET /api/v1/auth/oauth/github` - Initiate GitHub OAuth flow
+- `GET /api/v1/auth/oauth/github/callback` - Handle GitHub OAuth callback
+
 ## Security Measures
 
 - Strong password validation for registration (requires uppercase, lowercase, numbers, special chars)
@@ -40,14 +45,36 @@ CodeDefender uses a modern JWT-based authentication system with refresh tokens f
 - Audit logging tracks all authentication activities
 - Brute force protection via rate limiting
 
+## OAuth Integration
+
+CodeDefender supports authentication via OAuth providers:
+
+1. **GitHub**: Authenticate with your GitHub account
+   - Requests access to basic profile info and repository data
+   - Links accounts with matching email addresses
+   - Creates a new account if email doesn't exist
+
+OAuth scopes requested:
+- `user:email` - To access user email
+- `repo` - To access repository data for security scanning
+
 ## Configuration
 
-The following environment variables control authentication behavior:
+Authentication configuration is controlled by environment variables:
 
 ```
+# JWT Configuration
 JWT_SECRET=your_jwt_secret_key_here
 JWT_EXPIRATION=15m
 REFRESH_TOKEN_EXPIRATION=7d
+
+# GitHub OAuth credentials
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
+GITHUB_CALLBACK_URL=http://localhost:3000/api/v1/auth/oauth/github/callback
+
+# Frontend URL for OAuth redirects
+FRONTEND_URL=http://localhost:3000
 ```
 
 ## Best Practices

@@ -1,40 +1,32 @@
 import { PrismaClient } from '@prisma/client';
-import { seedPermissions, seedRoles } from './common/permissions.seed';
-import { seedSuperUser } from './common/users.seed';
-import { seedPlanPermissions } from './plan-permissions';
-
-const prisma = new PrismaClient();
+import { seedRoles } from './roles';
+import { seedUsers } from './users';
+import { seedPermissions } from './permissions';
 
 async function main() {
-  console.log('Starting database seeding...');
-  
+  const prisma = new PrismaClient();
   try {
-    // Seed in sequential order
+    // Seed in order of dependencies
     await seedPermissions(prisma);
     await seedRoles(prisma);
-    await seedSuperUser(prisma);
-    await seedPlanPermissions(prisma);
+    await seedUsers(prisma);
     
-    console.log('Database seeding completed successfully!');
+    console.log('Seed completed successfully');
   } catch (error) {
-    console.error('Error during seeding:', error);
+    console.error('Error seeding database:', error);
     throw error;
   } finally {
     await prisma.$disconnect();
   }
 }
 
-// Execute the seed function
-if (require.main === module) {
-  main()
-    .then(async () => {
-      await prisma.$disconnect();
-    })
-    .catch(async (e) => {
-      console.error(e);
-      await prisma.$disconnect();
-      process.exit(1);
-    });
-}
-
-export { seedPermissions, seedRoles, seedSuperUser, seedPlanPermissions };
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    // Explicitly disconnect for faster process exit
+    const prisma = new PrismaClient();
+    await prisma.$disconnect();
+  });

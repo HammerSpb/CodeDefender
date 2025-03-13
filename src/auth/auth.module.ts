@@ -12,6 +12,7 @@ import { TokensService } from './tokens.service';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottleLoginGuard } from './guards/throttle-login.guard';
 import { AuthExceptionFilter } from './filters/auth-exceptions.filter';
+import { GithubStrategy } from './strategies/github.strategy';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { AuthExceptionFilter } from './filters/auth-exceptions.filter';
     AuthService, 
     TokensService, 
     JwtStrategy,
+    GithubStrategy,
     {
       provide: APP_GUARD,
       useClass: ThrottleLoginGuard,

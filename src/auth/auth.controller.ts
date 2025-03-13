@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Post,
   Req,
+  Res,
   UseFilters,
   UseGuards,
 } from '@nestjs/common';
@@ -16,6 +17,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { LogoutDto } from './dto/logout.dto';
@@ -24,6 +26,8 @@ import { RegisterDto } from './dto/register.dto';
 import { AuthExceptionFilter } from './filters/auth-exceptions.filter';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Request } from 'express';
+import { AuthGuard } from '@nestjs/passport';
+import { OAuthResponse } from './types/oauth-response.type';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -93,5 +97,56 @@ export class AuthController {
   async getSessions(@Req() req: Request) {
     // Using non-null assertion since JwtAuthGuard ensures user is defined
     return this.authService.getUserSessions(req.user!.id);
+  }
+
+  // OAuth endpoints
+  @Get('oauth/github')
+  @ApiOperation({ summary: 'Authenticate with GitHub' })
+  @ApiResponse({ status: 302, description: 'Redirects to GitHub' })
+  @UseGuards(AuthGuard('github'))
+  async githubAuth() {
+    // Guard redirects to GitHub
+  }
+
+  @Get('oauth/github/callback')
+  @ApiOperation({ summary: 'GitHub OAuth callback' })
+  @ApiResponse({ status: 302, description: 'Redirects back to app with tokens' })
+  @UseGuards(AuthGuard('github'))
+  async githubAuthCallback(@Req() req: Request, @Res() res: Response) {
+    // The user data is added to req.user by the GitHub strategy
+    if (!req.user) {
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/error`);
+    }
+    
+    // Cast to our expected type after validation
+    const userData = req.user as unknown as OAuthResponse;
+    
+    const frontendUrl = this.getRedirectUrl(req);
+    
+    // Create URL with auth data
+    const redirectUrl = new URL(frontendUrl);
+    redirectUrl.searchParams.append('accessToken', userData.accessToken);
+    redirectUrl.searchParams.append('refreshToken', userData.refreshToken);
+    redirectUrl.searchParams.append('userId', userData.user.id);
+    redirectUrl.searchParams.append('isNewUser', userData.isNewUser ? 'true' : 'false');
+
+    // Redirect back to frontend with tokens
+    return res.redirect(redirectUrl.toString());
+  }
+
+  /**
+   * Get the redirect URL from the request or use default
+   */
+  private getRedirectUrl(req: Request): string {
+    // Try to get from cookie
+    const redirectUrl = req.cookies?.['redirectUrl'];
+    
+    // Alternatively check query param
+    const queryRedirect = req.query?.redirectUrl as string;
+    
+    // Use environment variable as fallback
+    const defaultRedirect = process.env.FRONTEND_URL || 'http://localhost:3000';
+    
+    return redirectUrl || queryRedirect || defaultRedirect;
   }
 }

@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { PrismaService } from './prisma/prisma.service';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
@@ -12,6 +13,9 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT', 3000);
+
+  // Use cookie parser
+  app.use(cookieParser());
 
   // Enable validation pipe globally
   app.useGlobalPipes(
@@ -51,7 +55,11 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   // Enable CORS
-  app.enableCors();
+  app.enableCors({
+    origin: configService.get('FRONTEND_URL', 'http://localhost:3000'),
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
 
   await app.listen(port);
   console.log(`Application is running on: http://localhost:${port}`);

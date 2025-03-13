@@ -1,5 +1,5 @@
 import { PrismaService } from '@/prisma/prisma.service';
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { LoginDto } from './dto/login.dto';
@@ -8,6 +8,7 @@ import { AuditLogsService } from '@/audit-logs/audit-logs.service';
 import { RegisterDto } from './dto/register.dto';
 import { TokensService } from './tokens.service';
 import { Request } from 'express';
+import { OAuthUserDto } from './dto/oauth-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -79,6 +80,217 @@ export class AuthService {
         lastName: user.lastName,
       },
     };
+  }
+
+  /**
+   * Find or create a user from OAuth provider data
+   */
+  async findOrCreateOAuthUser(oauthUserDto: OAuthUserDto, req?: Request) {
+    const { provider, providerId, email, firstName, lastName, accessToken } = oauthUserDto;
+
+    // First check if we already have this OAuth account linked
+    const existingOAuthLink = await this.prismaService.oAuthProvider.findUnique({
+      where: {
+        provider_providerId: {
+          provider,
+          providerId,
+        },
+      },
+      include: {
+        user: true,
+      },
+    });
+
+    // If we found an existing link, update the OAuth token and return the user
+    if (existingOAuthLink) {
+      // Log the OAuth login
+      await this.auditLogsService.create({
+        userId: existingOAuthLink.userId,
+        action: 'USER_LOGIN_OAUTH',
+        details: {
+          provider,
+          email,
+          timestamp: new Date().toISOString(),
+        },
+      });
+
+      // Generate tokens
+      const payload = {
+        email: existingOAuthLink.user.email,
+        sub: existingOAuthLink.userId,
+        role: existingOAuthLink.user.role,
+        ownerId: existingOAuthLink.user.ownerId,
+        plan: existingOAuthLink.user.plan,
+      };
+
+      const jwtAccessToken = this.tokensService.generateAccessToken(payload);
+      const refreshToken = await this.tokensService.generateRefreshToken(
+        existingOAuthLink.userId,
+        req?.ip,
+        req?.headers['user-agent'],
+        req?.headers['x-device-fingerprint'] as string,
+      );
+
+      return {
+        accessToken: jwtAccessToken,
+        refreshToken,
+        user: existingOAuthLink.user,
+        isNewUser: false,
+      };
+    }
+
+    // Check if the email is already registered
+    const existingUser = await this.prismaService.user.findUnique({
+      where: { email },
+    });
+
+    // If the email exists but isn't linked to this OAuth account yet
+    if (existingUser) {
+      // Link the OAuth account to the existing user
+      await this.prismaService.oAuthProvider.create({
+        data: {
+          provider,
+          providerId,
+          userId: existingUser.id,
+        },
+      });
+
+      // Log the OAuth link and login
+      await this.auditLogsService.create({
+        userId: existingUser.id,
+        action: 'USER_OAUTH_LINK',
+        details: {
+          provider,
+          email,
+          timestamp: new Date().toISOString(),
+        },
+      });
+
+      // Generate tokens
+      const payload = {
+        email: existingUser.email,
+        sub: existingUser.id,
+        role: existingUser.role,
+        ownerId: existingUser.ownerId,
+        plan: existingUser.plan,
+      };
+
+      const jwtAccessToken = this.tokensService.generateAccessToken(payload);
+      const refreshToken = await this.tokensService.generateRefreshToken(
+        existingUser.id,
+        req?.ip,
+        req?.headers['user-agent'],
+        req?.headers['x-device-fingerprint'] as string,
+      );
+
+      return {
+        accessToken: jwtAccessToken,
+        refreshToken,
+        user: existingUser,
+        isNewUser: false,
+      };
+    }
+
+    // If we reach here, we need to create a new user and link the OAuth account
+    try {
+      const result = await this.prismaService.$transaction(async (prisma) => {
+        // Create a new user
+        const newUser = await prisma.user.create({
+          data: {
+            email,
+            firstName,
+            lastName,
+            provider,
+            providerId,
+            role: 'MEMBER', // Default role
+            plan: Plan.STARTER,
+          },
+        });
+
+        // Create OAuth provider link
+        await prisma.oAuthProvider.create({
+          data: {
+            provider,
+            providerId,
+            userId: newUser.id,
+          },
+        });
+
+        // Find default Member role
+        const defaultRole = await prisma.role.findUnique({
+          where: { name: 'Member' },
+        });
+
+        if (defaultRole) {
+          // Assign default role
+          await prisma.userRoleAssignment.create({
+            data: {
+              userId: newUser.id,
+              roleId: defaultRole.id,
+            },
+          });
+        }
+
+        // Create personal workspace
+        const workspaceName = `${firstName || 'GitHub'}'s Workspace`;
+        const workspace = await prisma.workspace.create({
+          data: {
+            name: workspaceName,
+            ownerId: newUser.id,
+          },
+        });
+
+        // Add user to workspace as ADMIN
+        await prisma.userWorkspace.create({
+          data: {
+            userId: newUser.id,
+            workspaceId: workspace.id,
+            role: WorkspaceRole.ADMIN,
+          },
+        });
+
+        // Log the registration
+        await this.auditLogsService.create({
+          userId: newUser.id,
+          workspaceId: workspace.id,
+          action: 'USER_REGISTRATION_OAUTH',
+          details: {
+            provider,
+            email,
+            plan: Plan.STARTER,
+            workspace: workspaceName,
+          },
+        });
+
+        // Generate tokens
+        const payload = {
+          email: newUser.email,
+          sub: newUser.id,
+          role: newUser.role,
+          plan: newUser.plan,
+        };
+
+        const jwtAccessToken = this.tokensService.generateAccessToken(payload);
+        const refreshToken = await this.tokensService.generateRefreshToken(
+          newUser.id,
+          req?.ip,
+          req?.headers['user-agent'],
+          req?.headers['x-device-fingerprint'] as string,
+        );
+
+        return {
+          accessToken: jwtAccessToken,
+          refreshToken,
+          user: newUser,
+          workspace,
+          isNewUser: true,
+        };
+      });
+
+      return result;
+    } catch (error) {
+      throw new BadRequestException(`OAuth registration failed: ${error.message}`);
+    }
   }
 
   /**
